@@ -1,6 +1,7 @@
 # kinaseCancerEmbeddingTool
 Scripts and notebooks for the word-embedding kinase cancer prediction project:
 In this repository, we provide instructions on how to obtain new kinase-cancer links.
+See information for running the *Notebooks* at the bottom of this page.
 
 ## Set Up:
  Create a virtual environment in python 3 and activate the environment. 
@@ -146,4 +147,16 @@ Running the script for 2020 will produce these three files.
 * KCET_positive_2020.tsv  
 * KCET_negative_2020.tsv    
 * KCET_prediction_2020.tsv
+
+
+# Running the notebooks
+
+cd to the ``noebooks`` directory and enter
+```
+jupyter notebook
+```
+There are many notebooks to demonstrate and visualize data. To run the machine learning, first go to the
+notebook called ``ExtractDifferenceVectors.ipynb`` and follow directions there to download the required
+embeddings and generate the difference vectors. Then go to the notebook ``RandomForestPredictions.ipynb``
+to do RF learning. Finally, go to the notebook ``RankByDarkAndSLI.ipynb`` to do the final ranking.
 
