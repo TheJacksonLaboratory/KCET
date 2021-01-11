@@ -75,6 +75,10 @@ class KinasePredictor:
         if len(examples.columns) != 2:
             raise ValueError("Input dataframe must have exactly two columns")
         df = pd.DataFrame(columns = self._embeddings_df.columns)
+        total = len(examples.index)
+        if total==0:
+            raise ValueError("Attempt to get differnece vectors from empty data frame")
+        i = 0
         for _, row in examples.iterrows(): 
             ncbigene_id = row["gene_id"]
             mesh_id = row["mesh_id"]
@@ -94,6 +98,9 @@ class KinasePredictor:
                 #diff_index_pos_train.append(ncbigene_id + "," + mesh_id)
                 label = "%s-%s" % (ncbigene_id, mesh_id)
                 df.loc[label] = diff_kinase_mesh
+            i += 1
+            if i % 10000 == 0 and i > 0:
+                print("[INFO] Created %d/%d (%.1f%%) difference vectors" % (i, total, 100.0*i/total))
         print("[INFO] Extracted %s kinase-cancer difference vectors" % len(df))
         print("[INFO]\tInitial data: %d examples" % len(examples))
         print("[INFO]\tCould not identify %d gene ids" % len(unidentified_genes))
