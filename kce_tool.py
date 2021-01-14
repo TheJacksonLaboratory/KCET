@@ -100,20 +100,6 @@ The kcet commands are:
         targeted_kinases_phase_4 = targeted.get_targeted_kinases_with_gene_id_phase_4()
         targeted_kinases_phase_4.to_csv(targeted_kinases_phase_4_filename, sep='\t')
 
-    def merge(self):
-        parser = argparse.ArgumentParser(description='extract list of untargeted protein kinases and write to file')
-        parser.add_argument('-y', '--year', default= None, type = int, help='The first year a drug was in testing.')
-        parser.add_argument('-c','--clinical_trials', required=True, help="path to the clinical_trials_by_phase file")
-        args = parser.parse_args(sys.argv[2:])
-        parser = CTParserByPhase(clinical_trials=args.clinical_trials, year=args.year)
-        ## Output all phasaes
-        df_allphases = parser.get_all_phases_for_training()
-        filename = "%s_all_phases_%d_tr.tsv" % (args.prefix, parser.get_year())
-        df_allphases.to_csv(filename, sep='\t')
-        ## Output phase IV
-        df_phase4 = parser.get_phase_4()
-        filename = "%s_phase_4_%d_tr.tsv" % (args.prefix, parser.get_year())
-        df_phase4.to_csv(filename, sep='\t')
 
     def ttp(self):
         parser = argparse.ArgumentParser(description='Generate training, test, and prediction datasets')

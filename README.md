@@ -23,7 +23,6 @@ The kcet commands are:
    byphase      clinical trials by phase
    targeted     get list of targeted and untargeted kinases
    kinaselist   get list of all kinases
-   merge        merge PKI/trial and PKI/kinase information
    ttp          write positive, negative, and prediction datasets
 
 kinase cancer embedding tool
