@@ -223,6 +223,3 @@ class CTParserByPhase:
         df_tr.drop_duplicates(inplace=True)
         return df_tr
 
-
-
-    

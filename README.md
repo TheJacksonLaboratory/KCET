@@ -23,7 +23,6 @@ The kcet commands are:
    byphase      clinical trials by phase
    targeted     get list of targeted and untargeted kinases
    kinaselist   get list of all kinases
-   merge        merge PKI/trial and PKI/kinase information
    ttp          write positive, negative, and prediction datasets
 
 kinase cancer embedding tool
@@ -51,12 +50,12 @@ This script generates the file ``trainingset_protein_kinases.txt``
 
 ## Use the yactp (yet another clinical trials parser) tool
 
-Follow the instructions in the [yatcp](https://github.com/monarch-initiative/yactp) repository
+Follow the instructions in the [yactp](https://github.com/monarch-initiative/yactp) repository
 to generate the ``clinical_trials_by_phase.tsv`` file. We use the  ``trainingset_protein_kinases.txt`` file
 as input for yactp.
  
 ## Collect protein kinase inhibitor trials by phase:
-This script outputs two files; one represents the phase IV studies that have been published up to the
+This script outputs two files; one represents the phase 4 studies that have been published up to the
 year of the -y argument. The other consists of all studies that
 have been published up to the indicated year. If the ``-y`` argument is not used, then the
 current year is taken.
@@ -70,7 +69,7 @@ python kce_tool.py byphase -c <path-to-clinical-trials-file> \
 The purpose of this script is severalfold. Our machine-learning experiment seeks to link
 protein kinases (represented by gene symbols) to cancers that are treated by inhibiting the
 kinase in question. The clinical trials data has links between protein kinase inhibitors 
-and cancers. The file ``drug_kinase)_links.tsv`` has our hand-curated links between PKIs and the
+and cancers. The file ``drug_kinase_links.tsv`` has our hand-curated links between PKIs and the
 kinases that are their main targets. The file ``prot_kinase.tsv`` further more links them
 to the NCBI Gene ids for the kinases. 
 
@@ -81,12 +80,12 @@ to the NCBI Gene ids for the kinases.
 
 The output files are named based on the prefix. For example, if the default prefix is not changed and ``-y`` is set to 2018, the files will be called:
 
-1. KCET_phaseIV_2018.tsv
+1. KCET_phase_4_2018.tsv
 2. KCET_all_phases_2018.tsv
 
 Example:
 ```
-python parse_ct_by_phase.py -c <path-to-clinical-trials-file>  -y 2018
+python kce_tool.py byphase -c <path-to-clinical-trials-file>  -y 2018
 ```
 
 ## Find untargeted kinases
@@ -141,7 +140,7 @@ To run the script, you do not need to previously run any of the other scripts (w
 python kce_tool.py ttp -c <path-to-clinical-trials-file> [-y <int>] [-f <int>] [-p <string>]
 ```
 
-The ``-f`` argument is for the ``factor``, which is set to 10 by default. THe ``-p`` argument is the prefix, which is set to KCET by default.
+The ``-f`` argument is for the ``factor``, which is set to 10 by default. The ``-p`` argument is the prefix, which is set to KCET by default.
 Running the script for 2020 will produce these three files.
 
 * KCET_positive_2020.tsv  
@@ -151,7 +150,7 @@ Running the script for 2020 will produce these three files.
 
 # Running the notebooks
 
-cd to the ``noebooks`` directory and enter
+cd to the ``notebooks`` directory and enter
 ```
 jupyter notebook
 ```
