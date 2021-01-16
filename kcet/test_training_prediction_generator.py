@@ -1,21 +1,18 @@
 import random
 import pandas as pd
 import datetime
-from pandas.core.frame import DataFrame
 from typing import List
 
-from pandas.io.sql import DatabaseError
 
 from .pki_to_kinase_parser import PkiToKinaseParser
-from .protein_kinase_parser import ProteinKinaseParser
+from .kcet_parser import KcetParser
 from .ct_by_phase_parser import CTParserByPhase
-from .neoplasm_parser import NeoplasmParser
 
 
 
 class Link:
     """
-    Simple class to keep track of positive and ne             gative links using a Hash
+    Simple class to keep track of positive and negative links using a Hash
     """
     def __init__(self, kinase:str, cancer:str) -> None:
         self._kinase = kinase
@@ -49,8 +46,8 @@ class TestTrainingPredictionGenerator:
     def __init__(self, clinical_trials: str, year: int = None) -> None: 
         pkiParser = PkiToKinaseParser()
         self._pki_to_kinase_dict = pkiParser.get_pki_to_kinase_list_dict()
-        proteinParser = ProteinKinaseParser()
-        self._symbol_to_id_map = proteinParser.get_symbol_to_id_map()
+        kcetParser = KcetParser()
+        self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()
         if year is None:
             # If user does not pass year, take the current year
             now = datetime.datetime.now()
@@ -59,8 +56,7 @@ class TestTrainingPredictionGenerator:
         parser = CTParserByPhase(clinical_trials=clinical_trials, year=year)
         self._df_allphases = parser.get_all_phases_for_training() # all positive data, phasae 1,2,3,4
         self._df_phase4 = parser.get_phase_4() # all positive data, phase 4 only
-        nparser = NeoplasmParser()
-        self._mesh_list = nparser.get_mesh_id_list()
+        self._mesh_list = kcetParser.get_mesh_id_list()
 
 
     def get_positive_data_set(self) -> pd.DataFrame:
