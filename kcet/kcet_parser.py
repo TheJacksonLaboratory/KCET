@@ -18,6 +18,9 @@ class KcetParser:
         self._neoplasms_labels_tsv_path = os.path.join(d, 'input', 'neoplasms_labels.tsv')
         if not os.path.exists(self._neoplasms_labels_tsv_path):
             raise FileNotFoundError("Could not find file at %s" % self._neoplasms_labels_tsv_path)
+        self._target_level_tsv_path = os.path.join(d, 'input', 'target_develop_levels.tsv.csv')
+        if not os.path.exists(self._target_level_tsv_path):
+            raise FileNotFoundError("Could not find file at %s" % self._target_level_tsv_path)
 
     def get_symbol_to_id_map(self):
         """
@@ -131,3 +134,21 @@ class KcetParser:
             return sorted_vectors[["gene_symbol","cancer","probability"]]
         else:
             return sorted_vectors
+
+    def read_target_level_df(self):
+        """
+        Read the target development level file that related proteins to the levels
+        Tdark, Tchem, Tbio, Tclin
+        """
+        predictions = pd.read_csv(self._target_level_tsv_path,sep="\t")
+        columns = ['Sym', 'UniProt', 'Description', 'GeneID', 'TDL']
+        return predictions[columns]
+
+    def get_symbol_to_tdl_map(self):
+        predictions = self.read_target_level_df()
+        sym2tdl = defaultdict(str)
+        for _, row in predictions.iterrows():
+            symbol = row['Sym']
+            tdl = row['TDL']
+            sym2tdl[symbol] = tdl
+        return sym2tdl
