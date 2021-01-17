@@ -12,9 +12,6 @@ class KcetParser:
         self._prot_kinase_tsv_path = os.path.join(d, 'input', 'prot_kinase.tsv')
         if not os.path.exists(self._prot_kinase_tsv_path):
             raise FileNotFoundError("Could not find file at %s" % self._prot_kinase_tsv_path)
-        self._dark_kinase_tsv_path = os.path.join(d, 'input', 'tdark_kinase.tsv')
-        if not os.path.exists(self._dark_kinase_tsv_path):
-            raise FileNotFoundError("Could not find file at %s" % self._dark_kinase_tsv_path)
         self._neoplasms_labels_tsv_path = os.path.join(d, 'input', 'neoplasms_labels.tsv')
         if not os.path.exists(self._neoplasms_labels_tsv_path):
             raise FileNotFoundError("Could not find file at %s" % self._neoplasms_labels_tsv_path)
@@ -45,28 +42,6 @@ class KcetParser:
             ncbigene_id = "ncbigene%d" % ncbi_id
             id_to_symbol_map[ncbigene_id] =  gene_symbol
         return id_to_symbol_map
-
-    def get_dark_kinase_map(self):
-        print("[INFO] Reading dark kinase information from %s" % self._dark_kinase_tsv_path)
-        dark_kinase_data = pd.read_csv(self._dark_kinase_tsv_path, sep="\t")
-        symbol_to_id_map = defaultdict(str)
-        print(dark_kinase_data.head())
-        for i in range(dark_kinase_data.shape[0]):
-            gene_symbol = dark_kinase_data.iloc[i][0]
-            ncbi_id = dark_kinase_data.iloc[i][1]
-            ncbigene_id = "ncbigene%d" % ncbi_id
-            symbol_to_id_map[gene_symbol] =  ncbigene_id
-        return symbol_to_id_map
-
-    def get_dark_kinase_df(self) -> pd.DataFrame:
-        dark_kinase_map = self.get_dark_kinase_map()
-        entries = []
-        for k,v in dark_kinase_map.items():
-            d = {'symbol': k, 'gene_id': v}
-            entries.append(d)
-        df =  pd.DataFrame(entries)
-        cols = ['symbol', 'gene_id']
-        return df[cols]
 
     def get_mesh_id_list(self):
         """
