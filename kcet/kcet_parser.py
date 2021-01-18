@@ -12,9 +12,9 @@ class KcetParser:
         self._prot_kinase_tsv_path = os.path.join(d, 'input', 'prot_kinase.tsv')
         if not os.path.exists(self._prot_kinase_tsv_path):
             raise FileNotFoundError("Could not find file at %s" % self._prot_kinase_tsv_path)
-        self._dark_kinase_tsv_path = os.path.join(d, 'input', 'tdark_kinase.tsv')
-        if not os.path.exists(self._dark_kinase_tsv_path):
-            raise FileNotFoundError("Could not find file at %s" % self._dark_kinase_tsv_path)
+        #self._dark_kinase_tsv_path = os.path.join(d, 'input', 'tdark_kinase.tsv')
+        #if not os.path.exists(self._dark_kinase_tsv_path):
+            #raise FileNotFoundError("Could not find file at %s" % self._dark_kinase_tsv_path)
         self._neoplasms_labels_tsv_path = os.path.join(d, 'input', 'neoplasms_labels.tsv')
         if not os.path.exists(self._neoplasms_labels_tsv_path):
             raise FileNotFoundError("Could not find file at %s" % self._neoplasms_labels_tsv_path)
