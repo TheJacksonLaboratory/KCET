@@ -67,6 +67,8 @@ class CTParserByPhase:
         self._genesymbol_to_id_map = None
         self._drug_kinase_links = None
         self.all_phases_df = None
+        self._validation_pki_dict = None # List of PKI<->disease AFTER target year (can be empty if target year is now)
+        self._pki_dict = None # List of PKI<->disease UP TO target year
         ## Ingest data
         self._ingest_kinase_cancer_links()
 
@@ -150,16 +152,23 @@ class CTParserByPhase:
         for med in medications:
             print("[INFO] %s" % med)
         pki_dict = defaultdict(KinaseInhibitor)
+        validation_pki_dict = defaultdict(KinaseInhibitor)
         for t in trials:
-            if t.start_date > self._year:
-                continue  # Skip study newer than target year.
             med = t.drug
-            if not med in pki_dict:
-                ki = KinaseInhibitor(name=med)
-                pki_dict[med] = ki
-            ki = pki_dict.get(med)
-            ki.add_study(cancer=t.disease, mesh_id=t.mesh_id, nct=t.nct_id, year=t.start_date, phase=t.phase)
+            if t.start_date <= self._year:
+                if not med in pki_dict:
+                    ki = KinaseInhibitor(name=med)
+                    pki_dict[med] = ki
+                ki = pki_dict.get(med)
+                ki.add_study(cancer=t.disease, mesh_id=t.mesh_id, nct=t.nct_id, year=t.start_date, phase=t.phase)
+            else:
+                if not med in validation_pki_dict:
+                    ki = KinaseInhibitor(name=med)
+                    validation_pki_dict[med] = ki
+                ki = validation_pki_dict.get(med)
+                ki.add_study(cancer=t.disease, mesh_id=t.mesh_id, nct=t.nct_id, year=t.start_date, phase=t.phase)
         self._pki_dict = pki_dict
+        self._validation_pki_dict = validation_pki_dict
 
     def _get_data_frame(self, dict_list: List):
         """
@@ -167,6 +176,7 @@ class CTParserByPhase:
         Constructs the dataframe from a list of dictionaries
         """   
         extended_dict_list = [] ## The dictionaries where we map the PKIs to kinases/genes ids
+        validation_dict_list = [] ## For studies after the target date.
         for dct in dict_list:
             medication = dct['pki']
             if medication is None:
@@ -223,3 +233,27 @@ class CTParserByPhase:
         df_tr.drop_duplicates(inplace=True)
         return df_tr
 
+    def get_validation_all_phases(self):
+        """
+        Get all clinical studies from years after the target year.
+        If the target year is now -- throw an error
+        """
+        if self._year == datetime.datetime.now().year:
+            raise ValueError("Cannot get studies from the future! This function can only be used for historical comparisons")
+        dict_list = [] ## The dictionaries WITHOUT the info about kinases/gene ids
+        for _, v in self._validation_pki_dict.items():
+            dict_list.extend(v.get_data_frame_all_phases()) 
+        return self._get_data_frame(dict_list=dict_list)
+
+    def get_validation_phase_4(self):
+        """
+        Get all clinical studies from years after the target year.
+        If the target year is now -- throw an error
+        """
+        if self._year == datetime.datetime.now().year:
+            raise ValueError("Cannot get studies from the future! This function can only be used for historical comparisons")
+        dict_list = [] ## The dictionaries WITHOUT the info about kinases/gene ids
+        for _, v in self._validation_pki_dict.items():
+            dict_list.extend(v.get_data_frame_phase_4()) 
+        return self._get_data_frame(dict_list=dict_list)
+        
