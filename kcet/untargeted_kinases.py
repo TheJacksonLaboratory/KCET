@@ -5,7 +5,7 @@ import datetime
 
 
 from .ct_by_phase_parser import CTParserByPhase
-from .protein_kinase_parser import ProteinKinaseParser
+from .kcet_parser import KcetParser
 
 class UnTargetedKinases:
     def __init__(self, clinical_trials_by_phase: str, year: int = None):
@@ -27,7 +27,7 @@ class UnTargetedKinases:
             self._year = year
         # This file is in the kcet directory. We need to get to the parent directory
         # The following gets a list of all protein kinases
-        pkparser = ProteinKinaseParser()
+        pkparser = KcetParser()
         
         self._genesymbol_to_id_map = pkparser.get_symbol_to_id_map()
         targeted_set, targeted_set_phase_4 = self._get_targeted_kinase_set(clinical_trials_by_phase)

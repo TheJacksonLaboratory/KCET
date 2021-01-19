@@ -132,4 +132,4 @@ dmypy.json
 /p38/pyvenv.cfg
 /clinical_trials_by_phase.tsv
 notebooks/data
-
+notebooks/*.tsv
