@@ -3,8 +3,6 @@ import pandas as pd
 import datetime
 from typing import List
 
-
-from .pki_to_kinase_parser import PkiToKinaseParser
 from .kcet_parser import KcetParser
 from .ct_by_phase_parser import CTParserByPhase
 
@@ -44,7 +42,7 @@ class TestTrainingPredictionGenerator:
     Class to generate test, training, and prediction files.
     """
     def __init__(self, clinical_trials: str, year: int = None) -> None: 
-        pkiParser = PkiToKinaseParser()
+        pkiParser = KcetParser()
         self._pki_to_kinase_dict = pkiParser.get_pki_to_kinase_list_dict()
         kcetParser = KcetParser()
         self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()

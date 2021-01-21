@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+from typing import List, Dict, Set
 from collections import defaultdict
 
 class KcetParser:
@@ -18,8 +19,11 @@ class KcetParser:
         self._target_level_tsv_path = os.path.join(d, 'input', 'target_develop_levels.tsv.csv')
         if not os.path.exists(self._target_level_tsv_path):
             raise FileNotFoundError("Could not find file at %s" % self._target_level_tsv_path)
+        self._drug_kinase_links = os.path.join(d, 'input', 'drug_kinase_links.tsv')
+        if not os.path.exists(self._drug_kinase_links):
+            raise FileNotFoundError("Could not find file at %s" % self._drug_kinase_links)
 
-    def get_symbol_to_id_map(self):
+    def get_symbol_to_id_map(self)->Dict:
         """
         returns a dictionary like this: {'NCBIGene:2870': 'GRK6', 'NCBIGene:140609': 'NEK7', ... }
         """
@@ -33,7 +37,7 @@ class KcetParser:
             symbol_to_id_map[gene_symbol] =  ncbigene_id
         return symbol_to_id_map
 
-    def get_id_to_symbol_map(self):
+    def get_id_to_symbol_map(self)->Dict:
         kinase_data = pd.read_csv(self._prot_kinase_tsv_path, sep="\t", header=None)
         id_to_symbol_map = defaultdict(str)
         for i in range(kinase_data.shape[0]):
@@ -43,7 +47,7 @@ class KcetParser:
             id_to_symbol_map[ncbigene_id] =  gene_symbol
         return id_to_symbol_map
 
-    def get_mesh_id_list(self):
+    def get_mesh_id_list(self)->List:
         """
         Return a list of the MeSH ids that correspond to cancers from the 
         inputs/neoplasms_labels,tsv file
@@ -61,7 +65,7 @@ class KcetParser:
                 mesh_list.append(mesh_id)
         return mesh_list
 
-    def get_mesh_to_disease_map(self):
+    def get_mesh_to_disease_map(self)->Dict:
         """
         return a map with 'meshd000008': 'Abdominal Neoplasms', 'meshd000069293': 'Plasmablastic Lymphoma', ...
         """
@@ -110,7 +114,7 @@ class KcetParser:
         else:
             return sorted_vectors
 
-    def read_target_level_df(self):
+    def read_target_level_df(self)->pd.DataFrame:
         """
         Read the target development level file that related proteins to the levels
         Tdark, Tchem, Tbio, Tclin
@@ -119,7 +123,7 @@ class KcetParser:
         columns = ['Sym', 'UniProt', 'Description', 'GeneID', 'TDL']
         return predictions[columns]
 
-    def get_symbol_to_tdl_map(self):
+    def get_symbol_to_tdl_map(self)-> Dict:
         predictions = self.read_target_level_df()
         sym2tdl = defaultdict(str)
         for _, row in predictions.iterrows():
@@ -127,3 +131,51 @@ class KcetParser:
             tdl = row['TDL']
             sym2tdl[symbol] = tdl
         return sym2tdl
+
+
+    def get_gold_standard_df(self) -> pd.DataFrame:
+        kinase_to_inhibitor = defaultdict(list)
+        with open(self._drug_kinase_links) as f:
+            next(f) # skip header
+            for line in f:
+                fields = line.rstrip().split('\t')
+                if len(fields) != 3:
+                    raise ValueError("Bad line in %s: %s" % (self._drug_kinase_links, line))
+                pki = fields[0]
+                pk = fields[1]
+                kinase_to_inhibitor[pk].append(pki)
+        dict_list = []
+        for k, v in sorted(kinase_to_inhibitor.items()):
+            pkis = ", ".join(v)
+            d = {'gene':k, 'protein kinase inhibitors': pkis}
+            dict_list.append(d)
+        return pd.DataFrame(dict_list)#['gene', 'protein kinase inhibitors']
+
+    def get_gold_standard_set(self) -> Set:
+        gold = set()
+        with open(self._drug_kinase_links) as f:
+            next(f) # skip header
+            for line in f:
+                fields = line.rstrip().split('\t')
+                if len(fields) != 3:
+                    raise ValueError("Bad line in %s: %s" % (self._drug_kinase_links, line))
+                pk = fields[1]
+                gold.add(pk)
+        return gold
+
+    def get_pki_to_kinase_list_dict(self):
+        """
+        Create a dictionary with the data from drug_kinase_links.tsv
+        key -- a protein kinase inhibitor such as abemaciclib	
+        value -- list of kinases inhibited by the PKI, e.g., [CDK4,CDK6]
+        """
+        pki_to_kinase = defaultdict(list)
+        with open(self._drug_kinase_links) as f:
+            for line in f:
+                fields = line.rstrip().split('\t')
+                if len(fields) != 3:
+                    raise ValueError("Bad line in %s (%s)" % (self._drug_kinase_links, line))
+                pki = fields[0]
+                pk = fields[1] # kinase that is inhibited by the PKI in fields[0]
+                pki_to_kinase[pki].append(pk)
+        return pki_to_kinase
