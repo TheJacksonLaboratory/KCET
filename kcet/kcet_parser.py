@@ -3,12 +3,19 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict, Set
 from collections import defaultdict
+from .ct_by_phase_parser import CTParserByPhase
 
 class KcetParser:
     """
-    Simple class to parse various files needed throughout KCET including input/prot_kinase.tsv file and the tdark_kinase.tsv file
+    Simple class to parse various files needed throughout KCET including input/prot_kinase.tsv file and 
+    the tdark_kinase.tsv file
     """
     def __init__(self) -> None:
+        """
+        Initilized file paths from the ``input`` subfolder of the directory 
+        Input the various files into data structures
+        """
+        # Check that we can find all of the files we need before we start.
         d = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) 
         self._prot_kinase_tsv_path = os.path.join(d, 'input', 'prot_kinase.tsv')
         if not os.path.exists(self._prot_kinase_tsv_path):
@@ -22,8 +29,21 @@ class KcetParser:
         self._drug_kinase_links = os.path.join(d, 'input', 'drug_kinase_links.tsv')
         if not os.path.exists(self._drug_kinase_links):
             raise FileNotFoundError("Could not find file at %s" % self._drug_kinase_links)
+        # Ingest data
+        self._symbol_to_id_map = self._ingest_symbol_to_id_map()
+        print("[INFO] ingested symbol_to_id_map with %d entries such as {'NCBIGene:2870': 'GRK6'}" % len(self._symbol_to_id_map))
+        # Get reverse map
+        self._id_to_symbol_map = {v:k for k, v in self._symbol_to_id_map.items()}
+        self._mesh_list = self._ingest_mesh_id_list()
+        print("[INFO] Ingested mesh_id list with %d entries such as 'meshd000008' and 'meshd000069293', " % len(self._mesh_list))
+        self._meshid2disease_map = self._ingest_mesh_to_disease_map()
+        print("[INFO] Ingested _meshid2disease_map with %d entries" % len(self._meshid2disease_map))
+        self._sym2tdl = self._ingest_symbol_to_tdl_map()
+        print("[INFO] Ingested meshid2disease_map with %d entries" % len(self._sym2tdl))
+        self._pki_to_kinase = self._ingest_pki_to_kinase_list_dict()
+        print("[INFO] Ingested pki_to_kinase with %d entries" % len(self._pki_to_kinase))
 
-    def get_symbol_to_id_map(self)->Dict:
+    def _ingest_symbol_to_id_map(self)->Dict:
         """
         returns a dictionary like this: {'NCBIGene:2870': 'GRK6', 'NCBIGene:140609': 'NEK7', ... }
         """
@@ -37,17 +57,16 @@ class KcetParser:
             symbol_to_id_map[gene_symbol] =  ncbigene_id
         return symbol_to_id_map
 
+    def get_symbol_to_id_map(self)->Dict:
+        return self._symbol_to_id_map
+
     def get_id_to_symbol_map(self)->Dict:
-        kinase_data = pd.read_csv(self._prot_kinase_tsv_path, sep="\t", header=None)
-        id_to_symbol_map = defaultdict(str)
-        for i in range(kinase_data.shape[0]):
-            gene_symbol = kinase_data.iloc[i][0]
-            ncbi_id = kinase_data.iloc[i][2]
-            ncbigene_id = "ncbigene%d" % ncbi_id
-            id_to_symbol_map[ncbigene_id] =  gene_symbol
-        return id_to_symbol_map
+        return self._id_to_symbol_map
 
     def get_mesh_id_list(self)->List:
+        return self._mesh_list
+
+    def _ingest_mesh_id_list(self)->List:
         """
         Return a list of the MeSH ids that correspond to cancers from the 
         inputs/neoplasms_labels,tsv file
@@ -66,6 +85,9 @@ class KcetParser:
         return mesh_list
 
     def get_mesh_to_disease_map(self)->Dict:
+        return self._meshid2disease_map
+
+    def _ingest_mesh_to_disease_map(self)->Dict:
         """
         return a map with 'meshd000008': 'Abdominal Neoplasms', 'meshd000069293': 'Plasmablastic Lymphoma', ...
         """
@@ -123,7 +145,7 @@ class KcetParser:
         columns = ['Sym', 'UniProt', 'Description', 'GeneID', 'TDL']
         return predictions[columns]
 
-    def get_symbol_to_tdl_map(self)-> Dict:
+    def _ingest_symbol_to_tdl_map(self)-> Dict:
         predictions = self.read_target_level_df()
         sym2tdl = defaultdict(str)
         for _, row in predictions.iterrows():
@@ -131,6 +153,9 @@ class KcetParser:
             tdl = row['TDL']
             sym2tdl[symbol] = tdl
         return sym2tdl
+
+    def get_symbol_to_tdl_map(self)-> Dict:
+        return self._sym2tdl
 
 
     def get_gold_standard_df(self) -> pd.DataFrame:
@@ -163,7 +188,7 @@ class KcetParser:
                 gold.add(pk)
         return gold
 
-    def get_pki_to_kinase_list_dict(self):
+    def _ingest_pki_to_kinase_list_dict(self):
         """
         Create a dictionary with the data from drug_kinase_links.tsv
         key -- a protein kinase inhibitor such as abemaciclib	
@@ -179,3 +204,10 @@ class KcetParser:
                 pk = fields[1] # kinase that is inhibited by the PKI in fields[0]
                 pki_to_kinase[pki].append(pk)
         return pki_to_kinase
+
+    def get_pki_to_kinase_list_dict(self):
+        return self._pki_to_kinase
+
+
+
+    

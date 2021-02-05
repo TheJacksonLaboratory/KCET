@@ -71,6 +71,9 @@ class CTParserByPhase:
         self._pki_dict = None # List of PKI<->disease UP TO target year
         ## Ingest data
         self._ingest_kinase_cancer_links()
+        targeted_set, targeted_set_phase_4 = self._ingest_targeted_kinase_set(clinical_trials)
+        self._targeted = sorted(list(targeted_set))
+        self._targeted_phase_4 = sorted(list(targeted_set_phase_4))
 
     def _parse_prot_kinase(self) -> Dict:
         """
@@ -256,4 +259,47 @@ class CTParserByPhase:
         for _, v in self._validation_pki_dict.items():
             dict_list.extend(v.get_data_frame_phase_4()) 
         return self._get_data_frame(dict_list=dict_list)
+
+    def _ingest_targeted_kinase_set(self, path):
+        """
+        path -- path to the clinical_trials_by_phase file from yactp
+        This function creates two maps -- one with the earliest date by which 
+        a 
+        """
+        # df_all is a Pandas dataframe with all clinical trials
+        df_all = self.get_all_phases()
+        #not_later_than_target_year = df_all['year']<=self._year
+        #df_all_not_later = df_all[not_later_than_target_year]
+        targeted_set = set(df_all['kinase'])
+        ## Now restrict the targets to phase 4
+        is_phase_4 = df_all['phase'] == 'Phase 4'
+        df_all_not_later_phase_4 = df_all[is_phase_4]
+        targeted_set_phase_4 = set(df_all_not_later_phase_4['kinase'])
+        return targeted_set, targeted_set_phase_4
+
+    def get_targeted_kinases_with_gene_id(self):
+        dict_list = []
+        for kinase in self._targeted:
+            gene_id = self._genesymbol_to_id_map.get(kinase, "n/a")
+            d = { 'kinase': kinase, "gene.id": gene_id}
+            dict_list.append(d)
+        return pd.DataFrame(dict_list)
+
+    def get_untargeted_kinases_with_gene_id(self):
+        dict_list = []
+        targeted_set = set(self._targeted)
+        for kinase, gene_id in self._genesymbol_to_id_map.items():
+            if kinase in targeted_set:
+                continue
+            d = { 'kinase': kinase, "gene.id": gene_id}
+            dict_list.append(d)
+        return pd.DataFrame(dict_list)
+
+    def get_targeted_kinases_with_gene_id_phase_4(self):
+        dict_list = []
+        for kinase in self._targeted_phase_4:
+            gene_id = self._genesymbol_to_id_map.get(kinase, "n/a")
+            d = { 'kinase': kinase, "gene.id": gene_id}
+            dict_list.append(d)
+        return pd.DataFrame(dict_list)
         
