@@ -56,8 +56,9 @@ class CTParserByPhase:
         basepath = Path(dir_path).parent  # parent directory -- the base of the project
         self.prot_kinase_path = os.path.join(basepath, 'input', 'prot_kinase.tsv') #file consisting of protein kinases their gene symbols, ncbi gene ids and ensembl gene ids
         self.gene_symbol_to_ncbigene_map = self._parse_prot_kinase() #map gene symbols to their ncbi gene ids
-
-        self.clinical_trials_data_path = clinical_trials
+        self._clinical_trials_data_path = clinical_trials
+        if not os.path.isfile(self._clinical_trials_data_path):
+            raise FileNotFoundError("Could not find %s" % self._clinical_trials_data_path)
         self.drug_kinase_links_data_path = os.path.join(basepath, 'input', 'drug_kinase_links.tsv')
         if year is None:
             now = datetime.datetime.now() # default to current year
@@ -114,10 +115,10 @@ class CTParserByPhase:
         """
         parse the clinical_trials_by_phase.tsv file
         """
-        if not os.path.exists(self.clinical_trials_data_path):
+        if not os.path.exists(self._clinical_trials_data_path):
             raise FileNotFoundError("Could not find the clinical_trials_by_phase.tsv file")
         trials = []
-        with open(self.clinical_trials_data_path) as f:
+        with open(self._clinical_trials_data_path) as f:
             header = next(f)
             # should be disease	mesh_id	drug	phase	start_date	completion_date	nct_id
             if not header.startswith("disease"):
@@ -195,11 +196,11 @@ class CTParserByPhase:
                 geneid = self._genesymbol_to_id_map[kinase]
                 extended_d = copy.deepcopy(dct)
                 extended_d['kinase'] = kinase
-                extended_d['gene.id'] = geneid
+                extended_d['gene_id'] = geneid
                 extended_dict_list.append(extended_d)
         df = pd.DataFrame.from_records([d for d in extended_dict_list])
         # reorder the columns
-        newcols = ['cancer', 'mesh_id', 'kinase', 'gene.id',  'pki', 'nct', 'phase', 'year']
+        newcols = ['cancer', 'mesh_id', 'kinase', 'gene_id',  'pki', 'nct', 'phase', 'year']
         return df[newcols]
     
  
@@ -226,13 +227,13 @@ class CTParserByPhase:
 
     def get_all_phases_for_training(self):
         df = self.get_all_phases()
-        df_tr = df[['gene.id', 'mesh_id']].copy()
+        df_tr = df[['gene_id', 'mesh_id']].copy()
         df_tr.drop_duplicates(inplace=True)
         return df_tr
 
     def get_phase_4_for_training(self):
         df = self.get_phase_4()
-        df_tr = df[['gene.id', 'mesh_id']].copy()
+        df_tr = df[['gene_id', 'mesh_id']].copy()
         df_tr.drop_duplicates(inplace=True)
         return df_tr
 
@@ -281,7 +282,7 @@ class CTParserByPhase:
         dict_list = []
         for kinase in self._targeted:
             gene_id = self._genesymbol_to_id_map.get(kinase, "n/a")
-            d = { 'kinase': kinase, "gene.id": gene_id}
+            d = { 'kinase': kinase, "gene_id": gene_id}
             dict_list.append(d)
         return pd.DataFrame(dict_list)
 
@@ -291,7 +292,7 @@ class CTParserByPhase:
         for kinase, gene_id in self._genesymbol_to_id_map.items():
             if kinase in targeted_set:
                 continue
-            d = { 'kinase': kinase, "gene.id": gene_id}
+            d = { 'kinase': kinase, "gene_id": gene_id}
             dict_list.append(d)
         return pd.DataFrame(dict_list)
 
@@ -299,7 +300,7 @@ class CTParserByPhase:
         dict_list = []
         for kinase in self._targeted_phase_4:
             gene_id = self._genesymbol_to_id_map.get(kinase, "n/a")
-            d = { 'kinase': kinase, "gene.id": gene_id}
+            d = { 'kinase': kinase, "gene_id": gene_id}
             dict_list.append(d)
         return pd.DataFrame(dict_list)
         

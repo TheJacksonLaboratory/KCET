@@ -63,13 +63,13 @@ class KinasePredictor:
         The input is a dataframe with protein kinases (NCBI gene ids) and cancers (MeSH id)
         This function finds the embedded vectors for the genes and cancers, it substracts the
         cancer vector from the kinase vector, and it returns a data frame with these vectors.
-        This method assumees that the input dataframe contains columns called gene.id and mesh_id and will
+        This method assumees that the input dataframe contains columns called gene_id and mesh_id and will
         fail if this is not the case
         """
         unidentified_genes = set()
         unidentified_cancers = set()
         if not "gene_id" in examples.columns:
-            raise ValueError("Input dataframe must contain a column called gene.id")
+            raise ValueError("Input dataframe must contain a column called gene_id")
         if not "mesh_id" in examples.columns:
             raise ValueError("Input dataframe must contain a column called mesh_id")
         if len(examples.columns) != 2:

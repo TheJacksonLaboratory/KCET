@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict, Set
 from collections import defaultdict
-from .ct_by_phase_parser import CTParserByPhase
 
 class KcetParser:
     """
