@@ -115,17 +115,16 @@ class KcetDatasetGenerator:
             random_kinase = random.choice(kinase_list)
             randomLink = Link(kinase=random_kinase, cancer=random_cancer)
             if randomLink in positive_links:
-                print("Skipping random link %s since we found it in the positive set")
+                print("Skipping random link (%s,%s) since we found it in the positive set" % (random_kinase,random_cancer))
                 continue
             if randomLink in pretarget_negative_links:
-                print("Skipping random link %s since we already added it to the negative set")
+                print("Skipping random link (%s,%s) since we already added it to the negative set" % (random_kinase,random_cancer))
                 continue
             negative_links.add(randomLink)
         print("[INFO] We generated a negative set with %d examples (the positive set has %d)" % (len(negative_links), len(positive_links)))
         # format as a pandas dataframe
         negative_dict_list = [ l.to_dict() for l in negative_links]
         return pd.DataFrame(negative_dict_list)
-
 
     def _get_negative_training_dataset(self, positive_df: pd.DataFrame, factor:int=10) -> pd.DataFrame:
         """
@@ -147,19 +146,16 @@ class KcetDatasetGenerator:
             random_kinase = random.choice(kinase_list)
             randomLink = Link(kinase=random_kinase, cancer=random_cancer)
             if randomLink in positive_links:
-                print("Skipping random link %s since we found it in the positive set")
+                print("Skipping random link(%s,%s) since we found it in the positive set" %(random_kinase,random_cancer) )
                 continue
             if randomLink in negative_links:
-                print("Skipping random link %s since we already added it to the negative set")
+                print("Skipping random link (%s,%s) since we already added it to the negative set" %(random_kinase,random_cancer))
                 continue
             negative_links.add(randomLink)
         print("[INFO] We generated a negative set with %d examples (the positive set has %d)" % (len(negative_links), len(positive_links)))
         # format as a pandas dataframe
         negative_dict_list = [ l.to_dict() for l in negative_links]
         return pd.DataFrame(negative_dict_list)
-
-   
-        
 
     def get_prediction_dataset(self) -> pd.DataFrame:
         """
@@ -177,7 +173,3 @@ class KcetDatasetGenerator:
                     continue # Do not include positive links in the prediction set
                 prediction_list.append(L.to_dict())
         return pd.DataFrame(prediction_list)
-        
-
-
-       
