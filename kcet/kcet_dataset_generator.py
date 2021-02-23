@@ -89,6 +89,15 @@ class KcetDatasetGenerator:
         print("GPVDS year=" + str(year))
         later_than_target_year = self._df_allphases['year'] > year
         return self._df_allphases[later_than_target_year]
+
+    def _get_positive_validation_data_set_phase_4(self, year: int) -> pd.DataFrame:
+        """
+        Get all of the positive links (of phase 4) from after the target year-- used for validation
+        in historical validation experiments
+        """
+        print("GPVDS year=" + str(year))
+        phase_4_later_than_target_year = self._df_phase4['year'] > year
+        return self._df_allphases[phase_4_later_than_target_year]
     
     def _get_negative_validation_data_set(self, negative_df: pd.DataFrame) -> pd.DataFrame:
         """
