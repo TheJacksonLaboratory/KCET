@@ -70,6 +70,21 @@ class KcetDatasetGenerator:
             prediction_df = self.get_prediction_dataset()
             return positive_df, negative_df, prediction_df
 
+    def get_data_for_target_year_phase_4(self, target_year: int, factor: int = 10) -> Tuple[pd.DataFrame]:
+        """
+        Get positive and negative data for the target year indicated by the argument.
+        """
+        positive_df = self._get_positive_data_set(year=target_year)
+        negative_df = self._get_negative_training_dataset(positive_df=positive_df, factor=factor)
+        now = datetime.datetime.now()  # default to current year
+        currentyear = now.year
+        if target_year < currentyear:  # historical prediction
+            positive_validation_df = self._get_positive_validation_data_set_phase_4(year=target_year)#get phase 4 for the years after the target year
+            negative_validation_df = self._get_negative_validation_data_set(negative_df=negative_df)
+            return positive_df, negative_df, positive_validation_df, negative_validation_df
+        else:  # novel prediction
+            prediction_df = self.get_prediction_dataset()
+            return positive_df, negative_df, prediction_df
 
     def _get_positive_data_set(self, year:int) -> pd.DataFrame:
         """
