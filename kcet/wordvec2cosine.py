@@ -22,13 +22,13 @@ class Wordvec2Cosine:
     @staticmethod
     def _take(n, iterable):
         """
-        Return the first n items of the iterable as a list
+        Return the first n items of the iterable as a listsource kcet
         """
         return list(islice(iterable, n))
 
     def n_most_similar_words(self, target_word, n):
         """
-        Returns a list with the top n words most similar to the rarget word
+        Returns a list with the top n words most similar to the target word
         """
         cosine_similarities = defaultdict()
         for word in self._df.index:
@@ -53,4 +53,22 @@ class Wordvec2Cosine:
 
     def n_least_similar_words_df(self, target_word, n):
         n_items = self.n_least_similar_words(target_word=target_word, n=n)
+        return pd.DataFrame(n_items, columns=["word","similarity"])
+
+    def n_close_to_zero_similar_words(self, target_word, n, e):
+        cosine_similarities = defaultdict()
+        for word in self._df.index:
+            cosine_similarity = 1 - cosine(self._df.loc[target_word],self._df.loc[word])
+            if np.abs(cosine_similarity) < e:
+                cosine_similarities[word] = cosine_similarity
+
+        sorted_cosin_similarities = {k: v for k, v in sorted(cosine_similarities.items(), key=lambda item: item[1], reverse=False)}
+        if n < len(sorted_cosin_similarities):
+            n_items = Wordvec2Cosine._take(n, sorted_cosin_similarities.items())
+        else:
+            n_items = Wordvec2Cosine._take(len(sorted_cosin_similarities), sorted_cosin_similarities.items())
+        return n_items
+
+    def n_close_to_zero_similar_words_df(self, target_word, n, e):
+        n_items = self.n_close_to_zero_similar_words(target_word=target_word, n=n, e=e)
         return pd.DataFrame(n_items, columns=["word","similarity"])

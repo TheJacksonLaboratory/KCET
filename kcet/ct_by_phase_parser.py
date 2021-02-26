@@ -202,8 +202,7 @@ class CTParserByPhase:
         # reorder the columns
         newcols = ['cancer', 'mesh_id', 'kinase', 'gene_id',  'pki', 'nct', 'phase', 'year']
         return df[newcols]
-    
- 
+
     def get_all_phases(self):
         """
         Return a pandas dataframe with data for all trials and all phases
