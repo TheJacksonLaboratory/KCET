@@ -70,21 +70,26 @@ class KcetDatasetGenerator:
             prediction_df = self.get_prediction_dataset()
             return positive_df, negative_df, prediction_df
 
-    def get_data_for_target_year_phase_4(self, target_year: int, factor: int = 10) -> Tuple[pd.DataFrame]:
+
+    def get_data_for_target_year_and_later_year(self, target_year: int, factor: int = 10, num_years_later: int =1) -> Tuple[pd.DataFrame]:
         """
+        Get positive and negative training for the target year and positive and negative validation for num_years_later years later than the target year.
+
         Get positive and negative data for the target year indicated by the argument.
+
         """
         positive_df = self._get_positive_data_set(year=target_year)
         negative_df = self._get_negative_training_dataset(positive_df=positive_df, factor=factor)
         now = datetime.datetime.now()  # default to current year
         currentyear = now.year
-        if target_year < currentyear:  # historical prediction
-            positive_validation_df = self._get_positive_validation_data_set_phase_4(year=target_year)#get phase 4 for the years after the target year
-            negative_validation_df = self._get_negative_validation_data_set(negative_df=negative_df)
+        new_target_year = target_year + num_years_later
+        if target_year < currentyear and new_target_year<currentyear:  # historical prediction
+            positive_validation_df = self._get_positive_validation_data_set_later_year(new_target_year=new_target_year)
+            negative_validation_df = self._get_negative_validation_data_set_later_year(negative_df=negative_df, new_target_year=new_target_year)
             return positive_df, negative_df, positive_validation_df, negative_validation_df
-        else:  # novel prediction
-            prediction_df = self.get_prediction_dataset()
-            return positive_df, negative_df, prediction_df
+        else:
+            raise Exception("target year and the requested years later must be smaller than the current year! ")
+
 
     def _get_positive_data_set(self, year:int) -> pd.DataFrame:
         """
@@ -105,14 +110,17 @@ class KcetDatasetGenerator:
         later_than_target_year = self._df_allphases['year'] > year
         return self._df_allphases[later_than_target_year]
 
-    def _get_positive_validation_data_set_phase_4(self, year: int) -> pd.DataFrame:
+    def _get_positive_validation_data_set_later_year(self, new_target_year:int) -> pd.DataFrame:
         """
-        Get all of the positive links (of phase 4) from after the target year-- used for validation
+        Get all of the positive examples from n (n = new_target_year - target_year) years after the target year-- used for validation
         in historical validation experiments
         """
-        print("GPVDS year=" + str(year))
-        phase_4_later_than_target_year = self._df_phase4['year'] > year
-        return self._df_phase4[phase_4_later_than_target_year]
+
+        print("GPVDS year=" + str(new_target_year))
+        data_at_new_target_year = self._df_allphases['year'] == new_target_year
+        return self._df_allphases[data_at_new_target_year]
+
+
     
     def _get_negative_validation_data_set(self, negative_df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -127,6 +135,40 @@ class KcetDatasetGenerator:
         kinase_list = [ geneid for _, geneid in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
         positive_links = Link.fromDataFrameToLinkSet(self._df_allphases)
+        pretarget_negative_links = Link.fromDataFrameToLinkSet(negative_df)
+        negative_links = set()
+        i = 0  # use i to limit the number of attempts in case there is some problem
+        while len(negative_links) < n_neg_examples and i < 1e6:
+            i += 1
+            random_cancer = random.choice(cancer_id_list)
+            random_kinase = random.choice(kinase_list)
+            randomLink = Link(kinase=random_kinase, cancer=random_cancer)
+            if randomLink in positive_links:
+                print("Skipping random link (%s,%s) since we found it in the positive set" % (random_kinase,random_cancer))
+                continue
+            if randomLink in pretarget_negative_links:
+                print("Skipping random link (%s,%s) since we already added it to the negative set" % (random_kinase,random_cancer))
+                continue
+            negative_links.add(randomLink)
+        print("[INFO] We generated a negative set with %d examples (the positive set has %d)" % (len(negative_links), len(positive_links)))
+        # format as a pandas dataframe
+        negative_dict_list = [ l.to_dict() for l in negative_links]
+        return pd.DataFrame(negative_dict_list)
+
+    def _get_negative_validation_data_set_later_year(self, negative_df: pd.DataFrame, new_target_year:int=1) -> pd.DataFrame:
+        """
+        Get negative examples from some years after the target year-- used for validation
+        in historical validation experiments. Note that we take examples that are negative
+        from the perspective of the current time -- we are taking factor-times more negative
+        examples than positive examples, and this function chooses a set that is distinct
+        from the set of examples use prior to the target year (the same size as the
+        negative_df that is passed to us).
+        """
+        n_neg_examples = len(negative_df)
+        kinase_list = [ geneid for _, geneid in self._symbol_to_id_map.items()]
+        cancer_id_list = self._mesh_list
+        #positive links are the links from all phases less than the new_target_year
+        positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= new_target_year])
         pretarget_negative_links = Link.fromDataFrameToLinkSet(negative_df)
         negative_links = set()
         i = 0  # use i to limit the number of attempts in case there is some problem
