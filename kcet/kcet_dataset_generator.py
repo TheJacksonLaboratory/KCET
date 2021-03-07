@@ -70,9 +70,13 @@ class KcetDatasetGenerator:
             prediction_df = self.get_prediction_dataset()
             return positive_df, negative_df, prediction_df
 
+
     def get_data_for_target_year_and_later_year(self, target_year: int, factor: int = 10, num_years_later: int =1) -> Tuple[pd.DataFrame]:
         """
         Get positive and negative training for the target year and positive and negative validation for num_years_later years later than the target year.
+
+        Get positive and negative data for the target year indicated by the argument.
+
         """
         positive_df = self._get_positive_data_set(year=target_year)
         negative_df = self._get_negative_training_dataset(positive_df=positive_df, factor=factor)
@@ -85,6 +89,7 @@ class KcetDatasetGenerator:
             return positive_df, negative_df, positive_validation_df, negative_validation_df
         else:
             raise Exception("target year and the requested years later must be smaller than the current year! ")
+
 
     def _get_positive_data_set(self, year:int) -> pd.DataFrame:
         """
@@ -115,6 +120,8 @@ class KcetDatasetGenerator:
         data_at_new_target_year = self._df_allphases['year'] == new_target_year
         return self._df_allphases[data_at_new_target_year]
 
+
+    
     def _get_negative_validation_data_set(self, negative_df: pd.DataFrame) -> pd.DataFrame:
         """
         Get negative examples from after the target year-- used for validation
