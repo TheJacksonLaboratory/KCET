@@ -140,8 +140,6 @@ class KcetDatasetGenerator:
         print("GPVDS year=" + str(new_target_year))
         data_at_new_target_year = self._df_allphases['year'] == new_target_year
         return self._df_allphases[data_at_new_target_year]
-
-
     
     def _get_negative_validation_data_set(self, negative_df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -176,7 +174,7 @@ class KcetDatasetGenerator:
         negative_dict_list = [ l.to_dict() for l in negative_links]
         return pd.DataFrame(negative_dict_list)
 
-    def _get_negative_validation_data_set_later_year(self, negative_df: pd.DataFrame, new_target_year:int=1) -> pd.DataFrame:
+    def _get_negative_validation_data_set_later_year(self, negative_df: pd.DataFrame, new_target_year) -> pd.DataFrame:
         """
         Get negative examples from some years after the target year-- used for validation
         in historical validation experiments. Note that we take examples that are negative
