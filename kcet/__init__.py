@@ -9,6 +9,5 @@ __all__  = [
     "CTParserByPhase",
     "KinasePredictor",
     "KcetParser",
-    "TestTrainingPredictionGenerator",
     "Wordvec2Cosine"
 ]
