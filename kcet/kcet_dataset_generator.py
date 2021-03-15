@@ -91,7 +91,7 @@ class KcetDatasetGenerator:
         current_year = self.get_current_year()
         new_target_year = target_year + num_years_later
         if target_year < current_year and new_target_year < current_year:  # historical prediction
-            positive_validation_df = self._get_positive_validation_data_set_later_year(new_target_year=new_target_year)
+            positive_validation_df = self._get_positive_validation_data_set_later_year(old_target_year=target_year,new_target_year=new_target_year)
             negative_validation_df = self._get_negative_validation_data_set(negative_df=negative_df,year=target_year)
             return positive_df, negative_df, positive_validation_df, negative_validation_df
         else:
@@ -142,14 +142,14 @@ class KcetDatasetGenerator:
         later_than_target_year = self._df_allphases['year'] > year
         return self._df_allphases[later_than_target_year]
 
-    def _get_positive_validation_data_set_later_year(self, new_target_year: int) -> pd.DataFrame:
+    def _get_positive_validation_data_set_later_year(self, old_target_year: int, new_target_year: int) -> pd.DataFrame:
         """
-        Get all of the positive examples for n years after the target year where n = new_target_year - target_year
+        Get all of the positive examples from one year after the old_target_year until the new_target_year.
+        For example, if the old_target_year is 2010 and new_target_year is 2015, then the positive validation set is all positive links from
+        2011 until 2015.
         -- used for validation in historical validation experiments
         """
-
-        print("GPVDS year=" + str(new_target_year))
-        data_at_new_target_year = self._df_allphases['year'] == new_target_year
+        data_at_new_target_year=(self._df_allphases['year']>old_target_year) & (self._df_allphases['year'] <= new_target_year)
         return self._df_allphases[data_at_new_target_year]
 
     def _get_negative_validation_data_set(self, negative_df: pd.DataFrame, year: int) -> pd.DataFrame:
