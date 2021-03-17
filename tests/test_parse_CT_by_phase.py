@@ -35,3 +35,25 @@ class TestParseCTbyPhase(TestCase):
             key = "%s-%s" % (cancer, pki)
             seen.add(key)
         self.assertEqual(5, len(seen))
+
+    def test_num_disease_cancer_links_phase_4(self):
+        """
+        Test the number of kinase-disease links of phase 4 by parsing small_ct_by_phase.tsv.
+        Urethral Neoplasms-afatinib
+        Ureteral Neoplasms-afatinib
+        Multiple Myeloma-afatinib
+        Urinary Bladder Neoplasms-afatinib
+        Carcinoma, Non-Small-Cell Lung-afatinib
+
+
+        So, there is only one kinase-disease_link of pahse 4:
+        arcinoma, Non-Small-Cell Lung - afatinib
+        """
+        disease_links = self.ct_parser.get_phase_4()
+        seen = set()
+        for index, row in disease_links.iterrows():
+            cancer = row['cancer']
+            pki = row['pki']
+            key = "%s-%s" % (cancer, pki)
+            seen.add(key)
+        self.assertEqual(1, len(seen))
