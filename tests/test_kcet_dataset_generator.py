@@ -16,12 +16,12 @@ class TestKCETDatasetGEnerator(TestCase):
         Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
 
         afatinib targets two protein kinases:
-        afatinib	EGFR	18408761
-        afatinib	ERBB2	18408761
+        afatinib	EGFR    ncbigene1956
+        afatinib	ERBB2   ncbigene2064
 
         So, there are two links in positive validation set:
-        Multiple Myeloma	D009101 EGFR
-        Multiple Myeloma    D009101 ERBB2
+        Multiple Myeloma	D009101 EGFR    ncbigene1956
+        Multiple Myeloma    D009101 ERBB2   ncbigene2064
 
         """
         pos_validation = self.kcet_data_generator._get_positive_validation_data_set(2015)
@@ -30,7 +30,7 @@ class TestKCETDatasetGEnerator(TestCase):
 
     def test_get_positive_validation_data_set_2007(self):
         """
-        There are 11 drug-disease links after 2007:
+        There are 8 drug-disease links after 2007:
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 1	2009	2020	NCT03711422;NCT03827070;NCT02191891;NCT01288430;NCT01647711;NCT03054038;NCT01090011;NCT00993499;NCT04448379;NCT01999985;NCT02364609
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 3	2008	2015	NCT02044380;NCT02438722;NCT01853826;NCT01523587;NCT01814553;NCT01121393;NCT00656136;NCT00949650;NCT01085136;NCT01953913
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
@@ -41,20 +41,20 @@ class TestKCETDatasetGEnerator(TestCase):
         Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
 
         afatinib targets two protein kinases:
-        afatinib	EGFR	18408761
-        afatinib	ERBB2	18408761
+        afatinib	EGFR
+        afatinib	ERBB2
 
         So, there are 10 links in positive validation set:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2
-        Urinary Bladder Neoplasms	D001749 EGFR
-        Urinary Bladder Neoplasms	D001749 ERBB2
-        Urethral Neoplasms	D014523 EGFR
-        Urethral Neoplasms	D014523 ERBB2
-        Ureteral Neoplasms	D014516 EGFR
-        Ureteral Neoplasms	D014516 ERBB2
-        Multiple Myeloma	D009101 EGFR
-        Multiple Myeloma    D009101 ERBB2
+        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
+        Urinary Bladder Neoplasms	D001749 EGFR    ncbigene1956
+        Urinary Bladder Neoplasms	D001749 ERBB2   ncbigene2064
+        Urethral Neoplasms	D014523 EGFR    ncbigene1956
+        Urethral Neoplasms	D014523 ERBB2   ncbigene2064
+        Ureteral Neoplasms	D014516 EGFR    ncbigene1956
+        Ureteral Neoplasms	D014516 ERBB2   ncbigene2064
+        Multiple Myeloma	D009101 EGFR    ncbigene1956
+        Multiple Myeloma    D009101 ERBB2   ncbigene2064
 
         """
         pos_validation = self.kcet_data_generator._get_positive_validation_data_set(2007)
@@ -74,11 +74,11 @@ class TestKCETDatasetGEnerator(TestCase):
         There is 1 drug-disease link of phase 4 after 2007
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
         afatinib targets two protein kinases:
-        afatinib	EGFR	18408761
-        afatinib	ERBB2	18408761
+        afatinib	EGFR
+        afatinib	ERBB2
         So, there are two links in positive validation set:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2
+        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
         """
         df_pos_validation = self.kcet_data_generator._get_positive_validation_data_set_phase_4(2007)
         self.assertEqual(2, df_pos_validation.shape[0])
@@ -93,10 +93,10 @@ class TestKCETDatasetGEnerator(TestCase):
         afatinib targets two protein kinases: EGFR and ERBB2
 
         So, there will be 4 kinase-cancer links:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2
-        Multiple Myeloma	D009101  EGFR
-        Multiple Myeloma  D009101 ERBB2
+        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
+        Multiple Myeloma	D009101  EGFR   ncbigene1956
+        Multiple Myeloma  D009101 ERBB2 ncbigene2064
         """
         df_pos_validation = self.kcet_data_generator._get_positive_validation_data_set_later_year(2013, 2018)
         #print(df_pos_validation)
@@ -108,12 +108,12 @@ class TestKCETDatasetGEnerator(TestCase):
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
 
         afatinib targets two protein kinases:
-        afatinib	EGFR	18408761
-        afatinib	ERBB2	18408761
+        afatinib	EGFR
+        afatinib	ERBB2
 
         So, there are two links in positive validation set:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2
+        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
 
         """
         df_pos_training = self.kcet_data_generator._get_positive_data_set(2015)
@@ -127,8 +127,8 @@ class TestKCETDatasetGEnerator(TestCase):
 
 
         There are two positive training link:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2
+        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
 
         Number of negative training links is 10 times the number of positive training set. So, there are 20 negative training links
         """
@@ -142,13 +142,14 @@ class TestKCETDatasetGEnerator(TestCase):
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 3	2008	2015	NCT02044380;NCT02438722;NCT01853826;NCT01523587;NCT01814553;NCT01121393;NCT00656136;NCT00949650;NCT01085136;NCT01953913
 
 
-        There are two positive training link:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2
+        There are two positive training links:
+        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
 
         Number of negative training links is 10 times the number of positive training set. So, there are 20 negative training links
         We generate 20 negative validation set.
         """
         df_neg_training = self.kcet_data_generator._get_negative_training_dataset(2008)
         df_neg_validation = self.kcet_data_generator._get_negative_validation_data_set(df_neg_training,2008)
+        #print(df_neg_validation)
         self.assertEqual(20, df_neg_validation.shape[0])
