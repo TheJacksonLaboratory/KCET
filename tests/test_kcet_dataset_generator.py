@@ -70,4 +70,19 @@ class TestKCETDatasetGEnerator(TestCase):
         df_pos_training = self.kcet_data_generator._get_positive_data_set(2015)
         self.assertEqual(2, df_pos_training.shape[0])
 
+    def test_get_negative_training_dataset(self):
+        """
+        There are 2 lines up to 2015.
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 2	2007	2020	NCT02716311;NCT02098954;NCT02369484;NCT03810872;NCT02595840;NCT02795156;NCT03574402;NCT02747953;NCT02488694;NCT03157089;NCT04148898;NCT03623750;NCT02470065;NCT02597946;NCT04470076;NCT01932229;NCT01542437;NCT03727724;NCT04497584;NCT01415011;NCT02906163;NCT01003899;NCT02183883;NCT00730925;NCT00525148;NCT03399669;NCT00711594;NCT01156545;NCT00796549;NCT02450656;NCT01746251
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 3	2008	2015	NCT02044380;NCT02438722;NCT01853826;NCT01523587;NCT01814553;NCT01121393;NCT00656136;NCT00949650;NCT01085136;NCT01953913
+
+
+        There are two positive training link:
+        Carcinoma, Non-Small-Cell Lung	D002289 EGFR
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2
+
+        Number of negative training links is 10 times the number of positive training set. So, there are 20 negative training links
+        """
+        df_neg_training = self.kcet_data_generator._get_negative_training_dataset(2008)
+        self.assertEqual(20, df_neg_training.shape[0])
 

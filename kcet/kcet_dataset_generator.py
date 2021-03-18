@@ -71,7 +71,7 @@ class KcetDatasetGenerator:
         Get positive and negative data for the target year indicated by the argument.
         """
         positive_df = self._get_positive_data_set(year=target_year)
-        negative_df = self._get_negative_training_dataset(positive_df=positive_df, factor=factor)
+        negative_df = self._get_negative_training_dataset(year=target_year, factor=factor)
         current_year = self.get_current_year()
         if target_year < current_year:  # historical prediction
             positive_validation_df = self._get_positive_validation_data_set(year=target_year)
@@ -87,7 +87,7 @@ class KcetDatasetGenerator:
         Get positive and negative training for the target year and positive and negative validation for num_years_later years later than the target year.
         """
         positive_df = self._get_positive_data_set(year=target_year)
-        negative_df = self._get_negative_training_dataset(positive_df=positive_df, factor=factor)
+        negative_df = self._get_negative_training_dataset(year=target_year, factor=factor)
         current_year = self.get_current_year()
         new_target_year = target_year + num_years_later
         if target_year < current_year and new_target_year < current_year:  # historical prediction
@@ -103,7 +103,7 @@ class KcetDatasetGenerator:
         links from phase 4.
         """
         positive_df = self._get_positive_data_set(year=target_year)
-        negative_df = self._get_negative_training_dataset(positive_df=positive_df, factor=factor)
+        negative_df = self._get_negative_training_dataset(year=target_year, factor=factor)
         now = datetime.datetime.now()  # default to current year
         currentyear = now.year
         if target_year < currentyear:  # historical prediction
@@ -188,18 +188,20 @@ class KcetDatasetGenerator:
         negative_dict_list = [l.to_dict() for l in negative_links]
         return pd.DataFrame(negative_dict_list)
 
-    def _get_negative_training_dataset(self, positive_df: pd.DataFrame, factor: int = 10) -> pd.DataFrame:
+    def _get_negative_training_dataset(self, year: int, factor: int = 10) -> pd.DataFrame:
         """
         Get a negative training set.
         We take Random non-links that were not listed in any of phase 1,2,3,4 in the year up 
         to and including self._year
         We return factor times as many negative examples as we have positive examples
         """
-        n_pos_examples = len(positive_df)
-        n_neg_examples = n_pos_examples * factor
+
         kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
-        positive_links = Link.fromDataFrameToLinkSet(positive_df)
+        #positive_links = Link.fromDataFrameToLinkSet(positive_df)
+        positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= year])
+        n_pos_examples = len(positive_links)
+        n_neg_examples = n_pos_examples * factor
         negative_links = set()
         i = 0  # use i to limit the number of attempts in case there is some problem
         while len(negative_links) < n_neg_examples and i < 1e6:
