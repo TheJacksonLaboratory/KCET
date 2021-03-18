@@ -140,7 +140,17 @@ class KcetDatasetGenerator:
         """
         print("GPVDS year=" + str(year))
         later_than_target_year = self._df_allphases['year'] > year
-        return self._df_allphases[later_than_target_year]
+        df_pos_validation = self._df_allphases[later_than_target_year]
+        positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_validation)
+        kinase_list = []
+        cancer_list = []
+        for link in positive_validation_links:
+             kinase = link.kinase
+             cancer = link.cancer
+             kinase_list.append(kinase)
+             cancer_list.append(cancer)
+        df_pos_validation = pd.DataFrame(list(zip(kinase_list, cancer_list)), columns =['kinase', 'cancer'])
+        return df_pos_validation
 
     def _get_positive_validation_data_set_later_year(self, old_target_year: int, new_target_year: int) -> pd.DataFrame:
         """
@@ -149,8 +159,18 @@ class KcetDatasetGenerator:
         2011 until 2015.
         -- used for validation in historical validation experiments
         """
-        data_at_new_target_year=(self._df_allphases['year']>old_target_year) & (self._df_allphases['year'] <= new_target_year)
-        return self._df_allphases[data_at_new_target_year]
+        data_until_new_target_year=(self._df_allphases['year']>old_target_year) & (self._df_allphases['year'] <= new_target_year)
+        df_pos_validation = self._df_allphases[data_until_new_target_year]
+        positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_validation)
+        kinase_list = []
+        cancer_list = []
+        for link in positive_validation_links:
+            kinase = link.kinase
+            cancer = link.cancer
+            kinase_list.append(kinase)
+            cancer_list.append(cancer)
+        df_pos_validation = pd.DataFrame(list(zip(kinase_list, cancer_list)), columns=['kinase', 'cancer'])
+        return df_pos_validation
 
     def _get_negative_validation_data_set(self, negative_df: pd.DataFrame, year: int) -> pd.DataFrame:
         """
