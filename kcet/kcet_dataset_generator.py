@@ -116,7 +116,7 @@ class KcetDatasetGenerator:
 
     def _get_positive_data_set(self, year: int) -> pd.DataFrame:
         """
-        Positive training set: all links of phase 4 before the year given in the constructor
+        Positive training set: all links of phase 4 up to the year given in the constructor
         """
         if not isinstance(year, int):
             raise ValueError("year must be an integer")
@@ -126,7 +126,7 @@ class KcetDatasetGenerator:
 
     def _get_positive_validation_data_set_phase_4(self, year: int) -> pd.DataFrame:
         """
-        Get all of the positive links (of phase 4) from after the target year-- used for validation
+        Get all of the positive links (of phase 4)  after the target year-- used for validation
         in historical validation experiments
         """
         print("GPVDS year=" + str(year))
@@ -135,7 +135,7 @@ class KcetDatasetGenerator:
 
     def _get_positive_validation_data_set(self, year: int) -> pd.DataFrame:
         """
-        Get all of the positive examples from after the target year-- used for validation
+        Get all of the positive examples from all phases after the target year-- used for validation
         in historical validation experiments
         """
         print("GPVDS year=" + str(year))
@@ -174,7 +174,7 @@ class KcetDatasetGenerator:
 
     def _get_negative_validation_data_set(self,  negative_df: pd.DataFrame, year: int) -> pd.DataFrame:
         """
-        Get negative examples from after the target year-- used for validation
+        Get negative examples after the target year-- used for validation
         in historical validation experiments. Note that we take examples that are negative
         from the perspective of the current time -- we are taking factor-times more negative
         examples than positive examples, and this function chooses a set that is distinct
@@ -214,16 +214,14 @@ class KcetDatasetGenerator:
         Get a negative training set.
         We take Random non-links that were not listed in any of phase 1,2,3,4 in the year up 
         to and including self._year
-        We return factor times as many negative examples as we have positive examples
+        We return factor times as many negative examples as we have positive examples. Positive exsmples are links from phase 4 only!
         """
 
         kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
-        #positive_links = Link.fromDataFrameToLinkSet(positive_df)
         positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= year])
-
         positive_training_links = Link.fromDataFrameToLinkSet(pos_training_df)
-        n_pos_examples = len(positive_training_links)
+        n_pos_examples = len(positive_training_links) # number of links in positive training set
         n_neg_examples = n_pos_examples * factor
         negative_links = set()
         i = 0  # use i to limit the number of attempts in case there is some problem
@@ -232,7 +230,7 @@ class KcetDatasetGenerator:
             random_cancer = random.choice(cancer_id_list)
             random_kinase = random.choice(kinase_list)
             randomLink = Link(kinase=random_kinase, cancer=random_cancer)
-            if randomLink in positive_links:
+            if randomLink in positive_links: # check if the random link is in any of pahses 1,2,3,4 or not. If yes, generate another link
                 print("Skipping random link(%s,%s) since we found it in the positive set" % (
                     random_kinase, random_cancer))
                 continue
