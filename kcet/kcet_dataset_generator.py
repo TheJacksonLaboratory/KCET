@@ -169,7 +169,7 @@ class KcetDatasetGenerator:
             cancer = link.cancer
             kinase_list.append(kinase)
             cancer_list.append(cancer)
-        df_pos_validation = pd.DataFrame(list(zip(kinase_list, cancer_list)), columns=['kinase', 'cancer'])
+        df_pos_validation = pd.DataFrame(list(zip(cancer_list,kinase_list)), columns=['mesh_id', 'gene_id'])
         return df_pos_validation
 
     def _get_negative_validation_data_set(self,  negative_df: pd.DataFrame, year: int) -> pd.DataFrame:
