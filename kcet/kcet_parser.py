@@ -234,7 +234,7 @@ class KcetParser:
                     raise ValueError("Bad line in %s (%s)" % (self._pki_pk_in_list_links_path, line))
                 pki = fields[0]
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
-                value = fields[3]
+                value = fields[3] # act_value
                 if value and float(value) >= threshold:
                     pki_to_pk[pki].append(pk)
         with open(self._pki_pk_not_in_list_links_path) as f:
@@ -245,7 +245,7 @@ class KcetParser:
                     raise ValueError("Bad line in %s (%s)" % (self._pki_pk_not_in_list_links_path, line))
                 pki = fields[0]
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
-                value = fields[2]
+                value = fields[2] #act_value
                 if value and float(value) >= threshold:
                     pki_to_pk[pki].append(pk)
         return pki_to_pk
