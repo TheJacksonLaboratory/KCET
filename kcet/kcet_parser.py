@@ -30,12 +30,12 @@ class KcetParser:
         self._drug_kinase_links = os.path.join(d, 'input', 'drug_kinase_links.tsv')
         if not os.path.exists(self._drug_kinase_links):
             raise FileNotFoundError("Could not find file at %s" % self._drug_kinase_links)
-        self._pki_pk_in_list_links = os.path.join(d, 'input', 'Final-PKI-PK_DC_in_list.csv')
-        if not os.path.exists(self._pki_pk_in_list_links):
-            raise FileNotFoundError("Could not find file at %s" % self._pki_pk_in_list_links)
-        self._pki_pk_not_in_list_links = os.path.join(d, 'input', 'Final-PKI-PK_DC_not_in_list.csv')
-        if not os.path.exists(self._pki_pk_not_in_list_links):
-            raise FileNotFoundError("Could not find file at %s" % self._pki_pk_not_in_list_links)
+        self._pki_pk_in_list_links_path = os.path.join(d, 'input', 'final_pki_pk_dc_in_list.csv')
+        if not os.path.exists(self._pki_pk_in_list_links_path):
+            raise FileNotFoundError("Could not find file at %s" % self._pki_pk_in_list_links_path)
+        self._pki_pk_not_in_list_links_path = os.path.join(d, 'input', 'final_pki_pk_dc_not_in_list.csv')
+        if not os.path.exists(self._pki_pk_not_in_list_links_path):
+            raise FileNotFoundError("Could not find file at %s" % self._pki_pk_not_in_list_links_path)
         # Ingest data
         self._symbol_to_id_map = self._ingest_symbol_to_id_map()
         print("[INFO] ingested symbol_to_id_map with %d entries such as {'NCBIGene:2870': 'GRK6'}" % len(
@@ -226,23 +226,23 @@ class KcetParser:
         """
         threshold = 0.03
         pki_to_pk = defaultdict(list)
-        with open(self.pki_pk_in_list_path) as f:
+        with open(self._pki_pk_in_list_links_path) as f:
             f.readline()
             for line in f:
                 fields = line.rstrip().split(',')
                 if len(fields) != 6:
-                    raise ValueError("Bad line in %s (%s)" % (self.pki_pk_in_list_path, line))
+                    raise ValueError("Bad line in %s (%s)" % (self._pki_pk_in_list_links_path, line))
                 pki = fields[0]
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
                 value = fields[3]
                 if value and float(value) >= threshold:
                     pki_to_pk[pki].append(pk)
-        with open(self.pki_pk_not_in_list_path) as f:
+        with open(self._pki_pk_not_in_list_links_path) as f:
             f.readline()
             for line in f:
                 fields = line.rstrip().split(',')
                 if len(fields) != 5:
-                    raise ValueError("Bad line in %s (%s)" % (self.pki_pk_not_in_list_path, line))
+                    raise ValueError("Bad line in %s (%s)" % (self._pki_pk_not_in_list_links_path, line))
                 pki = fields[0]
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
                 value = fields[2]
