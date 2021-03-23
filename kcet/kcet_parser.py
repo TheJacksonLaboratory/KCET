@@ -220,11 +220,11 @@ class KcetParser:
 
     def _ingest_pki_to_kinase_list_dict(self):
         """
-        Create a dictionary with the data from Final-PKI-PK_DC_in_list and Final-PKI-PK_DC_not_in_list
+        Create a dictionary with the data from final_pki_pk_dc_in_list and final_pki_pk_dc_not_in_list
         key -- a protein kinase inhibitor such as abemaciclib
         value -- list of kinases inhibited by the PKI, e.g., [CDK4,CDK6]
         """
-        threshold = 0.03
+        threshold = 0.03 #The threshold on the act_value
         pki_to_pk = defaultdict(list)
         with open(self._pki_pk_in_list_links_path) as f:
             f.readline()
