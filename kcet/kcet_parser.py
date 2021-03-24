@@ -30,12 +30,6 @@ class KcetParser:
         self._drug_kinase_links = os.path.join(d, 'input', 'drug_kinase_links.tsv')
         if not os.path.exists(self._drug_kinase_links):
             raise FileNotFoundError("Could not find file at %s" % self._drug_kinase_links)
-        self._pki_pk_in_list_links_path = os.path.join(d, 'input', 'final_pki_pk_dc_in_list.csv')
-        if not os.path.exists(self._pki_pk_in_list_links_path):
-            raise FileNotFoundError("Could not find file at %s" % self._pki_pk_in_list_links_path)
-        self._pki_pk_not_in_list_links_path = os.path.join(d, 'input', 'final_pki_pk_dc_not_in_list.csv')
-        if not os.path.exists(self._pki_pk_not_in_list_links_path):
-            raise FileNotFoundError("Could not find file at %s" % self._pki_pk_not_in_list_links_path)
         # Ingest data
         self._symbol_to_id_map = self._ingest_symbol_to_id_map()
         print("[INFO] ingested symbol_to_id_map with %d entries such as {'NCBIGene:2870': 'GRK6'}" % len(
@@ -51,7 +45,6 @@ class KcetParser:
         print("[INFO] Ingested meshid2disease_map with %d entries" % len(self._sym2tdl))
         self._pki_to_kinase = self._ingest_pki_to_kinase_list_dict()
         print("[INFO] Ingested pki_to_kinase with %d entries" % len(self._pki_to_kinase))
-
 
     def _ingest_symbol_to_id_map(self) -> Dict:
         """
@@ -198,57 +191,22 @@ class KcetParser:
                 gold.add(pk)
         return gold
 
-    # def _ingest_pki_to_kinase_list_dict(self):
-    #     """
-    #     Create a dictionary with the data from drug_kinase_links.tsv
-    #     key -- a protein kinase inhibitor such as abemaciclib
-    #     value -- list of kinases inhibited by the PKI, e.g., [CDK4,CDK6]
-    #     """
-    #     pki_to_kinase = defaultdict(list)
-    #     with open(self._drug_kinase_links) as f:
-    #         for line in f:
-    #             fields = line.rstrip().split('\t')
-    #             if len(fields) != 3:
-    #                 raise ValueError("Bad line in %s (%s)" % (self._drug_kinase_links, line))
-    #             pki = fields[0]
-    #             pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
-    #             pki_to_kinase[pki].append(pk)
-    #     return pki_to_kinase
-
-    # def get_pki_to_kinase_list_dict(self):
-    #     return self._pki_to_kinase
-
     def _ingest_pki_to_kinase_list_dict(self):
         """
-        Create a dictionary with the data from final_pki_pk_dc_in_list and final_pki_pk_dc_not_in_list
+        Create a dictionary with the data from drug_kinase_links.tsv
         key -- a protein kinase inhibitor such as abemaciclib
         value -- list of kinases inhibited by the PKI, e.g., [CDK4,CDK6]
         """
-        threshold = 0.03 #The threshold on the act_value
-        pki_to_pk = defaultdict(list)
-        with open(self._pki_pk_in_list_links_path) as f:
-            f.readline()
+        pki_to_kinase = defaultdict(list)
+        with open(self._drug_kinase_links) as f:
             for line in f:
-                fields = line.rstrip().split(',')
-                if len(fields) != 6:
-                    raise ValueError("Bad line in %s (%s)" % (self._pki_pk_in_list_links_path, line))
+                fields = line.rstrip().split('\t')
+                if len(fields) != 3:
+                    raise ValueError("Bad line in %s (%s)" % (self._drug_kinase_links, line))
                 pki = fields[0]
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
-                value = fields[3] # act_value
-                if value and float(value) >= threshold:
-                    pki_to_pk[pki].append(pk)
-        with open(self._pki_pk_not_in_list_links_path) as f:
-            f.readline()
-            for line in f:
-                fields = line.rstrip().split(',')
-                if len(fields) != 5:
-                    raise ValueError("Bad line in %s (%s)" % (self._pki_pk_not_in_list_links_path, line))
-                pki = fields[0]
-                pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
-                value = fields[2] #act_value
-                if value and float(value) >= threshold:
-                    pki_to_pk[pki].append(pk)
-        return pki_to_pk
+                pki_to_kinase[pki].append(pk)
+        return pki_to_kinase
 
     def get_pki_to_kinase_list_dict(self):
         return self._pki_to_kinase
