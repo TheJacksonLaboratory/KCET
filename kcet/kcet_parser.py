@@ -221,6 +221,8 @@ class KcetParser:
     def _ingest_pki_to_kinase_list_dict(self):
         """
         Create a dictionary with the data from final_pki_pk_dc_in_list and final_pki_pk_dc_not_in_list
+        #final_pki_pk_dc_in_list: Kinase activities from DrugCentral and I have matched them (when possible) to the PKI2PK pairs
+        #final_pki_pk_dc_not_in_list: PKI2PK pairs and activities that are recorded in DrugCentral, but are not in Peter's list
         key -- a protein kinase inhibitor such as abemaciclib
         value -- list of kinases inhibited by the PKI, e.g., [CDK4,CDK6]
         """
@@ -235,7 +237,7 @@ class KcetParser:
                 pki = fields[0]
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
                 value = fields[3] # act_value
-                if value and float(value) >= threshold:
+                if value and float(value) <= threshold:
                     pki_to_pk[pki].append(pk)
         with open(self._pki_pk_not_in_list_links_path) as f:
             f.readline()
@@ -246,7 +248,7 @@ class KcetParser:
                 pki = fields[0]
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
                 value = fields[2] #act_value
-                if value and float(value) >= threshold:
+                if value and float(value) <= threshold:
                     pki_to_pk[pki].append(pk)
         return pki_to_pk
 
