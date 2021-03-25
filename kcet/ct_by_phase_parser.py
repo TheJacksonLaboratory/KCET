@@ -17,11 +17,12 @@ class Entry:
     def __init__(self, line: str) -> None:
         super().__init__()
         fields = line.rstrip().split('\t')
-        if len(fields) != 3:
+        if len(fields) != 4:
             raise ValueError(line)
         self._pki = fields[0]
         self._pk = fields[1]
-        self._pmid = fields[2]
+        self._act_value = fields[2]
+        self._pmid = fields[3]
 
     def __eq__(self, other):
         if isinstance(other, Entry):
@@ -30,7 +31,7 @@ class Entry:
             return False
 
     def __hash__(self):
-        return hash((self._pki, self._pk, self._pmid))
+        return hash((self._pki, self._pk, self._act_value,self._pmid))
 
     @property
     def pki(self) -> str:
@@ -194,6 +195,7 @@ class CTParserByPhase:
             for kinase in lst:
                 if not kinase in self._genesymbol_to_id_map:
                     # should never happen
+                    print(kinase)
                     raise ValueError("Could not find " + kinase + " in gene id map")
                 geneid = self._genesymbol_to_id_map[kinase]
                 extended_d = copy.deepcopy(dct)

@@ -201,7 +201,7 @@ class KcetParser:
         with open(self._drug_kinase_links) as f:
             for line in f:
                 fields = line.rstrip().split('\t')
-                if len(fields) != 3:
+                if len(fields) != 4:
                     raise ValueError("Bad line in %s (%s)" % (self._drug_kinase_links, line))
                 pki = fields[0]
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]

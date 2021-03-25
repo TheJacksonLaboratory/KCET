@@ -70,7 +70,7 @@ The kcet commands are:
                 raise ValueError("Bad header line of drug_kinase_links.tsv: " + header)
             for line in f:
                 fields = line.rstrip().split('\t')
-                if len(fields) != 3:
+                if len(fields) != 4:
                     raise ValueError("Bad line" + line)
                 pki = fields[0]
                 pki_set.add(pki)
