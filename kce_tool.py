@@ -1,8 +1,7 @@
 import argparse
 import sys
 
-
-from kcet import CTParserByPhase
+from kcet import CTParserByPhase, PkPkiFilter
 
 
 class KinaseCancerEmbeddingTool(object):
@@ -10,6 +9,7 @@ class KinaseCancerEmbeddingTool(object):
     This class uses a dispathcer pattern to implement one of a list of subcommands used by
     the KCET (KinaseCancerEmbeddingTool) project.
     """
+
     def __init__(self):
         parser = argparse.ArgumentParser(
             description='kinase cancer embedding tool',
@@ -18,6 +18,7 @@ class KinaseCancerEmbeddingTool(object):
 The kcet commands are:
    byphase      clinical trials by phase
    kinaselist   get list of all kinases
+   pkpki    extract list of pk pki links
 ''')
         parser.add_argument('command', help='Subcommand to run')
         # parse_args defaults to [1:] for args, but you need to
@@ -25,7 +26,7 @@ The kcet commands are:
         if len(sys.argv) < 2:
             parser.print_help()
             exit(1)
-        
+
         args = parser.parse_args(sys.argv[1:2])
         if not hasattr(self, args.command):
             print('Unrecognized command')
@@ -37,13 +38,13 @@ The kcet commands are:
     def byphase(self):
         parser = argparse.ArgumentParser(description='parse and integrate yactp data on kinases')
         parser.add_argument('--amend', action='store_true')
-        parser.add_argument('-c', '--clinical_trials',required=True,
-                    help='Path to the clinical_trials_by_phase.tsv file.')
-        parser.add_argument('-y', '--year', type=int,default=None,
-                    help='The start year of a clinical trial a drug (minimum 1993).')
+        parser.add_argument('-c', '--clinical_trials', required=True,
+                            help='Path to the clinical_trials_by_phase.tsv file.')
+        parser.add_argument('-y', '--year', type=int, default=None,
+                            help='The start year of a clinical trial a drug (minimum 1993).')
         parser.add_argument('--prefix',
-                    type=str, default='KCET',
-                    help='The prefix for the outfiles.')
+                            type=str, default='KCET',
+                            help='The prefix for the outfiles.')
         args = parser.parse_args(sys.argv[2:])
         print('Running byphase, yactp=%s' % args.clinical_trials)
         parser = CTParserByPhase(clinical_trials=args.clinical_trials, year=args.year)
@@ -61,7 +62,7 @@ The kcet commands are:
             description='extract list of protein kinases')
         parser.add_argument('-o', '--outfilename', default='trainingset_protein_kinases.txt', help="outfilename")
         args = parser.parse_args(sys.argv[2:])
-        dklinks ='input/drug_kinase_links.tsv'
+        dklinks = 'input/drug_kinase_links.tsv'
         pki_set = set()
         with open(dklinks) as f:
             header = next(f)
@@ -69,7 +70,7 @@ The kcet commands are:
                 raise ValueError("Bad header line of drug_kinase_links.tsv: " + header)
             for line in f:
                 fields = line.rstrip().split('\t')
-                if len(fields) != 3:
+                if len(fields) != 4:
                     raise ValueError("Bad line" + line)
                 pki = fields[0]
                 pki_set.add(pki)
@@ -80,8 +81,13 @@ The kcet commands are:
         fh.close()
         print("[INFO] Wrote %d kinases to %s" % (len(pki_list), args.outfilename))
 
-
-
+    def pkpki(self):
+        parser = argparse.ArgumentParser(description='Process PKI/PK data')
+        parser.add_argument('--max_multiplicity', action='store_true', default=5)
+        parser.add_argument('--outfilename', action='store_true', default='input/drug_kinase_links.tsv')
+        args = parser.parse_args(sys.argv[2:])
+        pkpki = PkPkiFilter()
+        pkpki.output_to_file(outfilename=args.outfilename, n_pki_limit=args.max_multiplicity)
 
 
 if __name__ == '__main__':

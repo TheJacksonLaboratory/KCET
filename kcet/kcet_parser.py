@@ -194,14 +194,14 @@ class KcetParser:
     def _ingest_pki_to_kinase_list_dict(self):
         """
         Create a dictionary with the data from drug_kinase_links.tsv
-        key -- a protein kinase inhibitor such as abemaciclib	
+        key -- a protein kinase inhibitor such as abemaciclib
         value -- list of kinases inhibited by the PKI, e.g., [CDK4,CDK6]
         """
         pki_to_kinase = defaultdict(list)
         with open(self._drug_kinase_links) as f:
             for line in f:
                 fields = line.rstrip().split('\t')
-                if len(fields) != 3:
+                if len(fields) != 4:
                     raise ValueError("Bad line in %s (%s)" % (self._drug_kinase_links, line))
                 pki = fields[0]
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
