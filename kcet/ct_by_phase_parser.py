@@ -196,7 +196,8 @@ class CTParserByPhase:
                 if not kinase in self._genesymbol_to_id_map:
                     # should never happen
                     print(kinase)
-                    raise ValueError("Could not find " + kinase + " in gene id map")
+                    #raise ValueError("Could not find " + kinase + " in gene id map")
+                    continue
                 geneid = self._genesymbol_to_id_map[kinase]
                 extended_d = copy.deepcopy(dct)
                 extended_d['kinase'] = kinase
