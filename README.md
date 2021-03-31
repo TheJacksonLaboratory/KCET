@@ -34,13 +34,17 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
+## Geenrate list of protein kinase inhibitors and corresponding protein kinases from DrugCentral
+We create the file ``input/drug_kinase_links.tsv``which is obtained by applying the affinity(multiplicity) threshold 0.03
+on data from DrugCentral. The file ``input/drug_kinase_links.tsv`` is a list of protein kinase inhibitors (PKI) that
+have been used to treat cancer. Each PKI is shown together with its known major targets, act-value and a relevant
+PubMed id (PMID).To generate drug_kinase_links.tsv file, use the  following command:
 
-
-
+``
+ python kce_tool.py pkpki
+``
 ## Generate list of protein kinase inhibitors
-The file ``input/drug_kinase_links.tsv`` is a hand-curated list of protein kinase inhibitors (PKI) that
-have been used to treat cancer. Each PKI is shown together with its known major targets and a relevant
-PubMed id (PMID). For the downstream analysis with the ``yactp`` tool, we need to have a file with the 
+For the downstream analysis with the ``yactp`` tool, we need to have a file with the 
 name of each PKI on one line and to remove duplicates. To generate this file, enter the following command
 
 ```
