@@ -57,9 +57,10 @@ The kcet commands are:
         df_phase4 = parser.get_phase_4()
         df_phase4.to_csv(filename, sep='\t')
 
+
     def kinaselist(self):
         parser = argparse.ArgumentParser(
-            description='extract list of protein kinases')
+            description='extract list of protein kinase inhibitors')
         parser.add_argument('-o', '--outfilename', default='trainingset_protein_kinases.txt', help="outfilename")
         args = parser.parse_args(sys.argv[2:])
         dklinks = 'input/drug_kinase_links.tsv'
@@ -79,13 +80,14 @@ The kcet commands are:
         for p in pki_list:
             fh.write(p + "\n")
         fh.close()
-        print("[INFO] Wrote %d kinases to %s" % (len(pki_list), args.outfilename))
+        print("[INFO] Wrote %d protein kinase inhibitors to %s" % (len(pki_list), args.outfilename))
 
     def pkpki(self):
         parser = argparse.ArgumentParser(description='Process PKI/PK data')
         parser.add_argument('--max_multiplicity', action='store_true', default=5)
         parser.add_argument('--outfilename', action='store_true', default='input/drug_kinase_links.tsv')
         args = parser.parse_args(sys.argv[2:])
+        print(args.max_multiplicity)
         pkpki = PkPkiFilter()
         pkpki.output_to_file(outfilename=args.outfilename, n_pki_limit=args.max_multiplicity)
 
