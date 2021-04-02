@@ -93,7 +93,7 @@ class PkPkiFilter:
         current_dir = os.path.dirname(__file__)
         parent_dir = os.path.dirname(os.path.normpath(current_dir))
         drug_central_pk_pki_file = os.path.join(parent_dir, 'input', "DrugCentralPKIPK.csv")
-        dklinks = os.path.join(parent_dir, 'input', "drug_kinase_links_3_2021.csv")
+        #dklinks = os.path.join(parent_dir, 'input', "drug_kinase_links_3_2021.csv")
         self._pk_pki_list = []
         logger.info("Reading PK/PKI data from %s", drug_central_pk_pki_file)
         with open(drug_central_pk_pki_file) as f:
