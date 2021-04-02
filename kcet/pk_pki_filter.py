@@ -3,6 +3,7 @@ import csv
 from collections import defaultdict
 import pandas as pd
 import logging
+import sys
 
 
 f_handler = logging.FileHandler('pk_pki.log')
@@ -10,7 +11,10 @@ f_handler.setLevel(logging.INFO)
 f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 f_handler.setFormatter(f_format)
 logger = logging.getLogger(__name__)
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setFormatter(f_format)
 logger.addHandler(f_handler)
+logger.addHandler(stdout_handler)
 
 
 class PkPki:
@@ -41,6 +45,12 @@ class PkPki:
         return self._pmid
 
     def is_valid(self, act_threshold: float = 0.03):
+        """
+        Note that we assume a PK-PKI can be valid if it does not have any value for
+        self._act_value, because this means the link came from PubMed rather than 
+        the DrugCentral affinity data. However, other code will favor PK-PKI links
+        that have explicit affinity data
+        """
         if self._act_value is None:
             return True
         else:
@@ -108,9 +118,11 @@ class PkPkiFilter:
                 else:
                     act_value = float(row['ACT_VALUE (uM)'])
                 act_type = row['ACT_TYPE']
-                if act_type == 'Kd' or act_value is None:
-                    pk_pki = PkPki(pki=pki, pk=pk, act_val=act_value, pmid=pmid)
-                    self._pk_pki_list.append(pk_pki)
+                if act_type is not None and len(act_type) > 1:
+                    if act_type != 'Kd' and act_type != 'Ki' and act_type != 'IC50' and act_type != 'EC50':
+                        raise ValueError("Unrecognized ACT_TYPE: %s" % act_type)
+                pk_pki = PkPki(pki=pki, pk=pk, act_val=act_value, pmid=pmid)
+                self._pk_pki_list.append(pk_pki)
         logger.info("Ingested %d pk pki links with Kd data", len(self._pk_pki_list))
 
     def _get_max_affinity_links(self, pk_pki, n_pki_limit: int, threshold: float):
@@ -166,6 +178,7 @@ class PkPkiFilter:
         valid_pk_pki.to_csv(outfilename, sep='\t', index=False)
         n_rows = valid_pk_pki.shape[0]
         logger.info("We wrote {} PK PKI links to file".format(n_rows))
+        logger.info("Output filename: \"{}\"".format(outfilename))
         logger.info("We got {} unique PKIs".format(len(valid_pk_pki.PKI.unique())))
         logger.info("We got {} unique PKs".format(len(valid_pk_pki.PK.unique())))
         logger.info("Settings: n_pki_limit: %d; threshold: %f", n_pki_limit, threshold)
