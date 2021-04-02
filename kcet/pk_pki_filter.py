@@ -77,29 +77,13 @@ class PkPki:
     def __eq__(self, other):
         return (self._pki, self._pk, self._act_value, self._pmid) == (other._pki, other._pk, other._act_value, other._pmid)
 
+    def __str__(self) -> str:
+        return "%s-%s (%s)" % (self._pki, self._pk, str(self._act_value))
+   
     @property
     def tsv_row(self):
         items = [self._pki, self._pk, str(self._act_value), self._pmid]
         return "\t".join(items)
-
-
-class PkPmid:
-    def __init__(self, pki, pk, pmid):
-        self._pk = pk
-        self._pki = pki
-        self._pmid = pmid
-
-    @property
-    def pk(self):
-        return self._pk
-
-    @property
-    def pki(self):
-        return self._pki
-
-    @property
-    def pmid(self):
-        return self._pmid
 
 
 class PkPkiFilter:
@@ -154,6 +138,8 @@ class PkPkiFilter:
         # If we get here, then there are more PKs than desired at the indicated threshold
         # We want to reduce the Kd threshold to get a smaller number of higher affinity PKI<->PK links
         sorted_pk_pki = sorted(pk_pki)
+        for x in sorted_pk_pki[:n_pki_limit]:
+            print(x)
         return sorted_pk_pki[:n_pki_limit]
 
     def get_valid_pk_pki(self, n_pki_limit: int = 5, threshold: float = 0.03):
@@ -164,7 +150,7 @@ class PkPkiFilter:
         """
         valid_pki_dict = defaultdict(list)
         for pk_pki in self._pk_pki_list:
-            if pk_pki.is_valid(act_threshold=threshold):
+            if pk_pki.is_valid_or_not_provided(act_threshold=threshold):
                 valid_pki_dict[pk_pki.pki].append(pk_pki)
         valid_pk_pki = []
         for k, v in valid_pki_dict.items():
