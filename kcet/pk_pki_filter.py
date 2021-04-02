@@ -46,6 +46,14 @@ class PkPki:
 
     def is_valid(self, act_threshold: float = 0.03):
         """
+        Do we have an affinity value and is it less than the threshold
+        """
+        if self._act_value is None:
+            return False
+        return self._act_value <= act_threshold
+
+    def is_valid_or_not_provided(self, act_threshold: float = 0.03):
+        """
         Note that we assume a PK-PKI can be valid if it does not have any value for
         self._act_value, because this means the link came from PubMed rather than 
         the DrugCentral affinity data. However, other code will favor PK-PKI links
@@ -58,6 +66,16 @@ class PkPki:
 
     def act_is_none(self):
         return self._act_value is None
+
+    def __lt__(self, other):
+        if other._act_value is None:
+             return True
+        if self._act_value is None:
+            return False
+        return self.act_value < other.act_value
+
+    def __eq__(self, other):
+        return (self._pki, self._pk, self._act_value, self._pmid) == (other._pki, other._pk, other._act_value, other._pmid)
 
     @property
     def tsv_row(self):
@@ -135,16 +153,8 @@ class PkPkiFilter:
             return pk_pki
         # If we get here, then there are more PKs than desired at the indicated threshold
         # We want to reduce the Kd threshold to get a smaller number of higher affinity PKI<->PK links
-        while len(pk_pki) > n_pki_limit:
-            # reduce threshold by 10%
-            threshold = threshold * 0.9
-            pk_pki = [x for x in pk_pki if x.is_valid(threshold)]
-            none_count = sum([1 for x in pk_pki if x.act_is_none()])
-            if none_count > n_pki_limit:
-                logger.warning("%s: %d PK <-> PKI links with no defined Kd, skipping" % (pk_pki[0].pki, len(pk_pki)))
-                return []
-        logger.info("returning %d items at threshold %f" % (len(pk_pki), threshold))
-        return pk_pki
+        sorted_pk_pki = sorted(pk_pki)
+        return sorted_pk_pki[:n_pki_limit]
 
     def get_valid_pk_pki(self, n_pki_limit: int = 5, threshold: float = 0.03):
         """
