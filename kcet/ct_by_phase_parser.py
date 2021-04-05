@@ -186,6 +186,7 @@ class CTParserByPhase:
         validation_dict_list = []  ## For studies after the target date.
         for dct in dict_list:
             medication = dct['pki']
+            print(medication)
             if medication is None:
                 raise ValueError("Could not extract PKI")  # should never happen
             if not medication in self._drug_kinase_links:

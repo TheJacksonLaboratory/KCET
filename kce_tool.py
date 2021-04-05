@@ -58,10 +58,10 @@ The kcet commands are:
         df_phase4.to_csv(filename, sep='\t')
 
 
-    def kinaselist(self):
+    def kinaseinhibitorslist(self):
         parser = argparse.ArgumentParser(
             description='extract list of protein kinase inhibitors')
-        parser.add_argument('-o', '--outfilename', default='trainingset_protein_kinases.txt', help="outfilename")
+        parser.add_argument('-o', '--outfilename', default='protein_kinase_inhibitors.txt', help="outfilename")
         args = parser.parse_args(sys.argv[2:])
         dklinks = 'input/drug_kinase_links.tsv'
         pki_set = set()

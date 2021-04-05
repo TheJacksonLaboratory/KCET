@@ -127,7 +127,7 @@ class PkPkiFilter:
                 self._pk_pki_list.append(pk_pki)
         logger.info("Ingested %d pk pki links with Kd data", len(self._pk_pki_list))
 
-    def _get_max_affinity_links(self, pk_pki, n_pki_limit: int, threshold: float):
+    def _get_max_affinity_links(self, pk_pki, n_pki_limit: int):
         if not isinstance(pk_pki, list):
             raise ValueError("pk_pki must be a list")
         if len(pk_pki) == 0:
@@ -157,7 +157,7 @@ class PkPkiFilter:
             logger.info("Processing %s", k)
             if len(v) > n_pki_limit:
                 logger.warning("Adjusting threshold for PKI {} because it inhibits too many PKs ({})".format(k, len(v)))
-                v = self._get_max_affinity_links(pk_pki=v, n_pki_limit=n_pki_limit, threshold=threshold)
+                v = self._get_max_affinity_links(pk_pki=v, n_pki_limit=n_pki_limit)
             for pk_pki in v:
                 if pk_pki.act_value is None:
                     actval = 'n/a'
