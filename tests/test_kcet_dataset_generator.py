@@ -62,6 +62,55 @@ class TestKCETDatasetGEnerator(TestCase):
         #print(df_pos_validation)
         self.assertEqual(6, df_pos_validation.shape[0])
 
+    def test_get_positive_validation_data_set_1_later_year_2012_2015(self):
+        """
+        There are three disease-drug links between 2012 and 2015:
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        Urinary Bladder Neoplasms	D001749	afatinib	Phase 2	2013	2015	NCT02122172;NCT02465060
+        Urethral Neoplasms	D014523	afatinib	Phase 2	2013	2013	NCT02122172
+        Ureteral Neoplasms	D014516	afatinib	Phase 2	2013	2013	NCT02122172
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+
+        afatinib targets 3 protein kinases: EGFR, ERBB2, ERBB4
+
+        So, there will be 15 kinase-cancer links:
+        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB4  ncbigene2066
+        Urinary Bladder Neoplasms	D001749 EGFR    ncbigene1956
+        Urinary Bladder Neoplasms	D001749 ERBB2   ncbigene2064
+        Urinary Bladder Neoplasms	D001749 ERBB4  ncbigene2066
+        Urethral Neoplasms	D014523 EGFR    ncbigene1956
+        Urethral Neoplasms	D014523 ERBB2   ncbigene2064
+        Urethral Neoplasms	D014523 ERBB4  ncbigene2066
+        Ureteral Neoplasms	D014516 EGFR    ncbigene1956
+        Ureteral Neoplasms	D014516 ERBB2   ncbigene2064
+        Ureteral Neoplasms	D014516 ERBB4  ncbigene2066
+        Multiple Myeloma	D009101  EGFR   ncbigene1956
+        Multiple Myeloma  D009101 ERBB2 ncbigene2064
+        Multiple Myeloma  D009101 ERBB4 ncbigene2066
+        """
+        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_later_year(2012, 2015)
+        #print(df_pos_validation)
+        self.assertEqual(15, df_pos_validation.shape[0])
+
+    def test_get_positive_validation_data_set_1_phase4_later_year_2012_2015(self):
+        """
+        There are three disease-drug links between 2012 and 2015:
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+
+        afatinib targets 3 protein kinases: EGFR, ERBB2, ERBB4
+
+        So, there will be 15 kinase-cancer links:
+        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
+        Carcinoma, Non-Small-Cell Lung	D002289 ERBB4  ncbigene2066
+
+        """
+        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_later_year_phase_4(2012, 2015)
+        #print(df_pos_validation)
+        self.assertEqual(3, df_pos_validation.shape[0])
+
     def test_get_positive_validation_data_set_1_phase4_later_year_2013_2018(self):
         """
         There is only one disease-drug link between 2014 and 2018:
