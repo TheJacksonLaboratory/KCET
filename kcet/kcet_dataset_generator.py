@@ -81,7 +81,7 @@ class KcetDatasetGenerator:
             prediction_df = self.get_prediction_dataset()
             return positive_df, negative_df, prediction_df
 
-    def get_data_for_target_year_and_later_year(self, target_year: int, factor: int = 10, num_years_later: int = 1) -> \
+    def get_data_after_target_year_upto_later_year(self, target_year: int, factor: int = 10, num_years_later: int = 1) -> \
             Tuple[pd.DataFrame, pd.DataFrame,pd.DataFrame, pd.DataFrame]:
         """
         Get positive and negative training for the target year and positive and negative validation for num_years_later years later than the target year.
@@ -113,6 +113,13 @@ class KcetDatasetGenerator:
         else:  # novel prediction
             prediction_df = self.get_prediction_dataset()
             return positive_df, negative_df, prediction_df
+
+    def get_data_for_novel_prediction(self,target_year: int, factor: int = 10):
+        positive_df = self._get_positive_data_set(year=target_year)
+        negative_df = self._get_negative_training_dataset(pos_training_df=positive_df, year=target_year, factor=factor)
+        prediction_df = self.get_prediction_dataset()
+        return positive_df, negative_df, prediction_df
+
 
     def _get_positive_data_set(self, year: int) -> pd.DataFrame:
         """
