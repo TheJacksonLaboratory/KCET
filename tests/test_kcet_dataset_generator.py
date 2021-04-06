@@ -3,7 +3,7 @@ import os
 from unittest import TestCase
 
 
-class TestKCETDatasetGEnerator(TestCase):
+class TestKCETDatasetGenerator(TestCase):
     @classmethod
     def setUpClass(cls):
         current_dir = os.path.dirname(__file__)
