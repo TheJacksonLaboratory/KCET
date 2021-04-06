@@ -17,7 +17,7 @@ class KinaseCancerEmbeddingTool(object):
 
 The kcet commands are:
    byphase      clinical trials by phase
-   kinaselist   get list of all kinases
+   pkilist   get list of all protein kinase inhibitors
    pkpki    extract list of pk pki links
 ''')
         parser.add_argument('command', help='Subcommand to run')
@@ -58,7 +58,7 @@ The kcet commands are:
         df_phase4.to_csv(filename, sep='\t')
 
 
-    def kinaseinhibitorslist(self):
+    def pkilist(self):
         parser = argparse.ArgumentParser(
             description='extract list of protein kinase inhibitors')
         parser.add_argument('-o', '--outfilename', default='protein_kinase_inhibitors.txt', help="outfilename")

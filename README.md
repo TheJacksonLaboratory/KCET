@@ -20,9 +20,10 @@ $ python kce_tool.py
 usage: kcet <command> [<args>]
 
 The kcet commands are:
+   pkpki        list of protein kinases and their inhibitors
    byphase      clinical trials by phase
    targeted     get list of targeted and untargeted kinases
-   kinaselist   get list of all kinases
+   pkilist      get list of all protein kinase inhibitors
    ttp          write positive, negative, and prediction datasets
 
 kinase cancer embedding tool
@@ -48,9 +49,9 @@ For the downstream analysis with the ``yactp`` tool, we need to have a file with
 name of each PKI on one line and to remove duplicates. To generate this file, enter the following command
 
 ```
-python kce_tool.py kinaselist
+python kce_tool.py pkilist
 ```
-This script generates the file ``trainingset_protein_kinases.txt``
+This script generates the file ``protein_kinase_inhibitors.txt``
 
 ## Use the yactp (yet another clinical trials parser) tool
 
