@@ -1,3 +1,4 @@
+Size of return set: 698
 D000008	Abdominal Neoplasms	Abdominal Neoplasm; Neoplasm, Abdominal; Neoplasms, Abdominal
 D000069293	Plasmablastic Lymphoma	Lymphoma, Plasmablastic; Lymphomas, Plasmablastic; Plasmablastic Lymphomas
 D000069295	Mammary Analogue Secretory Carcinoma	
@@ -20,6 +21,10 @@ D000077777	Myopericytoma	Myopericytomas
 D000077779	Pancreatic Intraductal Neoplasms	Intraductal Neoplasm, Pancreatic; Intraductal Neoplasms, Pancreatic; Neoplasm, Pancreatic Intraductal; Pancreatic Intraductal Neoplasm
 D000079822	Extranodal Extension	
 D000080443	Diffuse Intrinsic Pontine Glioma	
+D000082802	Warburg Effect, Oncologic	Oncologic Warburg Effect
+D000083023	Colitis-Associated Neoplasms	Colitis Associated Neoplasms; Colitis-Associated Neoplasm; Neoplasm, Colitis-Associated
+D000084122	Cardiac Papillary Fibroelastoma	Cardiac Papillary Fibroelastomas; Fibroelastoma, Cardiac Papillary; Papillary Fibroelastoma, Cardiac
+D000086002	Mesothelioma, Malignant	Malignant Mesotheliomas; Mesotheliomas, Malignant
 D000182	ACTH Syndrome, Ectopic	
 D000230	Adenocarcinoma	Adenocarcinomas
 D000231	Adenocarcinoma, Papillary	Adenocarcinomas, Papillary; Papillary Adenocarcinoma; Papillary Adenocarcinomas
@@ -51,7 +56,7 @@ D001752	Blast Crisis	Blast Crises; Crises, Blast; Crisis, Blast
 D001845	Bone Cysts	Bone Cyst; Cyst, Bone; Cysts, Bone
 D001859	Bone Neoplasms	Bone Neoplasm; Neoplasm, Bone
 D001913	Bowen's Disease	Bowens Disease; Disease, Bowen's
-D001932	Brain Neoplasms	
+D001932	Brain Neoplasms	Brain Neoplasm; Neoplasm, Brain
 D001935	Branchioma	Branchiomas
 D001943	Breast Neoplasms	Breast Neoplasm; Neoplasm, Breast
 D001948	Brenner Tumor	
@@ -201,7 +206,7 @@ D008175	Lung Neoplasms
 D008202	Lymphangioma	Lymphangiomas
 D008203	Lymphangiomyoma	Lymphangiomyomas
 D008204	Lymphangiosarcoma	Lymphangiosarcomas
-D008207	Lymphatic Metastasis	Lymphatic Metastases; Metastases, Lymphatic; Metastasis, Lymphatic
+D008207	Lymphatic Metastasis	Lymphatic Metastases
 D008210	Lymphocele	Lymphoceles
 D008223	Lymphoma	Lymphomas
 D008224	Lymphoma, Follicular	Follicular Lymphomas; Lymphomas, Follicular
@@ -211,7 +216,7 @@ D008258	Waldenstrom Macroglobulinemia	Macroglobulinemia, Waldenstrom
 D008303	Malignant Carcinoid Syndrome	Carcinoid Syndrome, Malignant; Carcinoid Syndromes, Malignant; Malignant Carcinoid Syndromes; Syndrome, Malignant Carcinoid; Syndromes, Malignant Carcinoid
 D008325	Mammary Neoplasms, Experimental	Experimental Mammary Neoplasm; Mammary Neoplasm, Experimental; Neoplasm, Experimental Mammary
 D008339	Mandibular Neoplasms	Mandibular Neoplasm; Neoplasm, Mandibular; Neoplasms, Mandibular
-D008415	Mastocytosis	Mastocytoses
+D008415	Mastocytosis	
 D008441	Maxillary Neoplasms	Maxillary Neoplasm; Neoplasm, Maxillary; Neoplasms, Maxillary
 D008444	Maxillary Sinus Neoplasms	Maxillary Sinus Neoplasm; Neoplasm, Maxillary Sinus
 D008476	Mediastinal Cyst	Cyst, Mediastinal; Cysts, Mediastinal; Mediastinal Cysts
@@ -365,7 +370,7 @@ D013581	Synovial Cyst	Cyst, Synovial; Cysts, Synovial
 D013584	Sarcoma, Synovial	Sarcomas, Synovial; Synovial Sarcoma; Synovial Sarcomas
 D013586	Synovitis, Pigmented Villonodular	Pigmented Villonodular Synovitides; Pigmented Villonodular Synovitis; Synovitides, Pigmented Villonodular; Villonodular Synovitides, Pigmented; Villonodular Synovitis, Pigmented
 D013724	Teratoma	Teratomas
-D013736	Testicular Neoplasms	Neoplasm, Testicular; Testicular Neoplasm
+D013736	Testicular Neoplasms	
 D013798	Thecoma	Thecomas
 D013899	Thoracic Neoplasms	Neoplasm, Thoracic; Neoplasms, Thoracic; Thoracic Neoplasm
 D013945	Thymoma	Thymomas
@@ -566,7 +571,7 @@ D018311	Luteoma	Luteomas
 D018312	Sex Cord-Gonadal Stromal Tumors	
 D018315	Glioma, Subependymal	Gliomas, Subependymal; Subependymal Gliomas
 D018316	Gliosarcoma	Gliosarcomas
-D018317	Nerve Sheath Neoplasms	Neoplasm, Nerve Sheath; Nerve Sheath Neoplasm
+D018317	Nerve Sheath Neoplasms	Neoplasm, Nerve Sheath
 D018318	Neurofibroma, Plexiform	Neurofibromas, Plexiform; Plexiform Neurofibroma; Plexiform Neurofibromas
 D018319	Neurofibrosarcoma	Neurofibrosarcomas
 D018321	Neurothekeoma	Neurothekeomas
@@ -634,7 +639,7 @@ D050398	Adamantinoma	Adamantinomas
 D051527	Odontogenic Tumor, Squamous	Odontogenic Tumors, Squamous; Squamous Odontogenic Tumors; Tumor, Squamous Odontogenic; Tumors, Squamous Odontogenic
 D051642	Histiocytoma	Histiocytomas
 D051677	Histiocytoma, Malignant Fibrous	Fibrous Histiocytoma, Malignant; Fibrous Histiocytomas, Malignant; Histiocytomas, Malignant Fibrous; Malignant Fibrous Histiocytomas
-D052958	Tarlov Cysts	Cysts, Tarlov
+D052958	Tarlov Cysts	
 D053578	Opsoclonus-Myoclonus Syndrome	Opsoclonus Myoclonus Syndrome
 D054000	Nevus, Sebaceous of Jadassohn	
 D054066	Leukemia, Large Granular Lymphocytic	

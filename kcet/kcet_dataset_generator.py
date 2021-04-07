@@ -98,9 +98,11 @@ class KcetDatasetGenerator:
         else:
             raise Exception("target year and the future year must be previous to the current year! ")
 
-    def get_data_for_novel_prediction(self,target_year: int, factor: int = 10):
-        positive_training_df = self._get_positive_training_data_set(year=target_year)
-        negative_training_df = self._get_negative_training_dataset(pos_training_df=positive_training_df, year=target_year, factor=factor)
+    def get_data_for_novel_prediction(self,current_year: int, factor: int = 10):
+        if current_year != self.get_current_year():
+            raise Exception("For novel prediction, year must be the current year! ")
+        positive_training_df = self._get_positive_training_data_set(year=current_year)
+        negative_training_df = self._get_negative_training_dataset(pos_training_df=positive_training_df, year=current_year, factor=factor)
         prediction_df = self.get_prediction_dataset()
         return positive_training_df, negative_training_df, prediction_df
 
