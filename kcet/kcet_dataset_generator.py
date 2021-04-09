@@ -79,7 +79,7 @@ class KcetDatasetGenerator:
             negative_validation_df = self._get_negative_validation_data_set(negative_df=negative_training_df,year=target_year)
             return positive_training_df, negative_training_df, positive_validation_df, negative_validation_df
         else:
-            raise Exception("target year and the future year must be previous to the current year! ")
+            raise Exception("target year and the future year must be before the current year! ")
 
     def get_data_after_target_year_upto_later_year_phase_4(self, target_year: int, factor: int = 10, num_years_later: int = 1) -> Tuple[pd.DataFrame]:
         """
@@ -96,7 +96,7 @@ class KcetDatasetGenerator:
             negative_validation_df = self._get_negative_validation_data_set(negative_df=negative_training_df, year=target_year)
             return positive_training_df, negative_training_df, positive_validation_df, negative_validation_df
         else:
-            raise Exception("target year and the future year must be previous to the current year! ")
+            raise Exception("target year and the future year must be before  the current year! ")
 
     def get_data_for_novel_prediction(self,current_year: int, factor: int = 10):
         if current_year != self.get_current_year():
@@ -124,8 +124,8 @@ class KcetDatasetGenerator:
         phase_4_later_than_target_year = (self._df_phase4['year'] > old_target_year) & (self._df_phase4['year'] <= new_target_year)
         #data_until_new_target_year = (self._df_allphases['year'] > old_target_year) & (
                     #self._df_allphases['year'] <= new_target_year)
-        df_pos_validation = self._df_phase4[phase_4_later_than_target_year]
-        positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_validation)
+        df_pos_valid = self._df_phase4[phase_4_later_than_target_year]
+        positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_valid)
         kinase_list = []
         cancer_list = []
         for link in positive_validation_links:
@@ -146,8 +146,8 @@ class KcetDatasetGenerator:
         -- used for validation in historical validation experiments
         """
         data_until_new_target_year=(self._df_allphases['year'] > old_target_year) & (self._df_allphases['year'] <= new_target_year)
-        df_pos_validation = self._df_allphases[data_until_new_target_year]
-        positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_validation)
+        df_pos_valid = self._df_allphases[data_until_new_target_year]
+        positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_valid)
         kinase_list = []
         cancer_list = []
         for link in positive_validation_links:

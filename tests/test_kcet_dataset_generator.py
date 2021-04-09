@@ -299,12 +299,12 @@ class TestKCETDatasetGenerator(TestCase):
         Carcinoma, Non-Small-Cell Lung	D002289 ERBB4  ncbigene2066
         """
         df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_later_year_phase_4(2013, 2018)
-        #print(df_pos_validation.head())
+        print(df_pos_validation.head())
         self.assertEqual(3, df_pos_validation.shape[0])
 
     def test_get_positive_validation_data_set_2_later_year_phase_4_2013_2020(self):
         """
-        There are 6 disease-drug links between 2014 and 2020:
+        There are 2 disease-drug links between 2014 and 2020:
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
         Breast Neoplasms	D001943	abemaciclib	Phase 4	2019	2021	NCT04707196;NCT03988114;NCT04031885
 
@@ -325,7 +325,7 @@ class TestKCETDatasetGenerator(TestCase):
         Breast Neoplasms	D001943 CDK6    ncbigene1021
         """
         df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_later_year_phase_4(2013, 2020)
-        #print(df_pos_validation)
+        print(df_pos_validation)
         self.assertEqual(5, df_pos_validation.shape[0])
 
     def test_get_negative_training_dataset_2_2008(self):
