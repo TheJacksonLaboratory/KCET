@@ -112,20 +112,21 @@ class TestKCETDatasetGenerator(TestCase):
 
     def test_get_positive_validation_data_set_1_phase4_later_year_2012_2015(self):
         """
-        There are three disease-drug links between 2012 and 2015:
+        There is one disease-drug link between 2012 and 2015:
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
 
-        afatinib targets 3 protein kinases: EGFR, ERBB2, ERBB4
+        But,
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        was studied in phase 1,2,3 clinical trials studies.
 
-        So, there will be 15 kinase-cancer links:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB4  ncbigene2066
+
+
+        So, there is no  kinase-cancer link
 
         """
         df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_later_year_phase_4(2012, 2015)
         #print(df_pos_validation)
-        self.assertEqual(3, df_pos_validation.shape[0])
+        self.assertEqual(0, df_pos_validation.shape[0])
 
     def test_get_positive_validation_data_set_1_phase4_later_year_2013_2018(self):
         """
