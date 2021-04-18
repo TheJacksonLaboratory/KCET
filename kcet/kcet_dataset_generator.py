@@ -155,7 +155,7 @@ class KcetDatasetGenerator:
         cancer_list = []
         for link in positive_validation_links:
             if link in all_phases_positive_links:
-                print("Skipping  link (%s,%s) since we found it in the positive sll phases set" % (
+                print("Skipping  link (%s,%s) since we found it in the positive all phases set" % (
                     link.kinase,link.cancer))
             else:
                 kinase = link.kinase
