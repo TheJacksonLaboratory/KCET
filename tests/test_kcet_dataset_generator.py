@@ -130,19 +130,19 @@ class TestKCETDatasetGenerator(TestCase):
 
     def test_get_positive_validation_data_set_1_phase4_later_year_2013_2018(self):
         """
-        There is only one disease-drug link between 2014 and 2018:
+         There is one disease-drug link between 2012 and 2015:
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
 
-        afatinib targets 3 protein kinases: EGFR, ERBB2, ERBB4
+        But,
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        was studied in phase 1,2,3 clinical trials studies.
 
-        So, there will be 6 kinase-cancer links:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB4  ncbigene2066
+        So, there is no  kinase-cancer link
+
         """
         df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_later_year_phase_4(2013, 2018)
         # print(df_pos_validation)
-        self.assertEqual(3, df_pos_validation.shape[0])
+        self.assertEqual(0, df_pos_validation.shape[0])
 
     def test_get_negative_training_dataset_1_2008(self):
         """
@@ -315,24 +315,21 @@ class TestKCETDatasetGenerator(TestCase):
 
     def test_get_positive_validation_data_set_2_phase_4_later_year_2013_2018(self):
         """
-        There is 1 disease-drug link between 2014 and 2018:
+        There is one disease-drug link between 2012 and 2015:
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
 
-        afatinib targets 3 protein kinases:
-        afatinib	EGFR    ncbigene1956
-        afatinib	ERBB2   ncbigene2064
-        afatinib	ERBB4   ncbigene2066
+        But,
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        was studied in phase 1,2,3 clinical trials studies.
 
 
 
-        So, there will be 3 kinase-cancer links:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB4  ncbigene2066
+        So, there is no  kinase-cancer link
+
         """
         df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_later_year_phase_4(2013, 2018)
         print(df_pos_validation.head())
-        self.assertEqual(3, df_pos_validation.shape[0])
+        self.assertEqual(0, df_pos_validation.shape[0])
 
     def test_get_positive_validation_data_set_2_later_year_phase_4_2013_2020(self):
         """
@@ -340,25 +337,27 @@ class TestKCETDatasetGenerator(TestCase):
         Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
         Breast Neoplasms	D001943	abemaciclib	Phase 4	2019	2021	NCT04707196;NCT03988114;NCT04031885
 
-        afatinib targets 3 protein kinases:
-        afatinib	EGFR    ncbigene1956
-        afatinib	ERBB2   ncbigene2064
-        afatinib	ERBB4   ncbigene2066
+
+        But,
+
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        was studied in phase 1,2,3 clinical trials studies.
+
+        So, there is only one link:
+        Breast Neoplasms	D001943	abemaciclib	Phase 4	2019	2021	NCT04707196;NCT03988114;NCT04031885
+
 
         abemaciclib targets two protein kinases:
         abemaciclib CDK4 ncbigene1019
         abemaciclib CDK6 ncbigene1021
 
-        So, there will be 5 kinase-cancer links:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB4   ncbigene2066
+        So, there will be 2 kinase-cancer links:
         Breast Neoplasms	D001943 CDK4    ncbigene1019
         Breast Neoplasms	D001943 CDK6    ncbigene1021
         """
         df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_later_year_phase_4(2013, 2020)
         print(df_pos_validation)
-        self.assertEqual(5, df_pos_validation.shape[0])
+        self.assertEqual(2, df_pos_validation.shape[0])
 
     def test_get_negative_training_dataset_2_2008(self):
         """
