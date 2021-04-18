@@ -48,19 +48,26 @@ class TestKCETDatasetGenerator(TestCase):
         Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
         Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
 
+        But,
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        has been studied in phases 1,2,3 too. So, it should not be considered in prediction(test) set.
+
+
+        So, there will be  only:
+        Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+
         afatinib targets 3 protein kinases: EGFR, ERBB2, ERBB4
 
-        So, there will be 6 kinase-cancer links:
-        Carcinoma, Non-Small-Cell Lung	D002289 EGFR    ncbigene1956
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB2   ncbigene2064
-        Carcinoma, Non-Small-Cell Lung	D002289 ERBB4  ncbigene2066
+        So, there will be 3 kinase-cancer links:
+
         Multiple Myeloma	D009101  EGFR   ncbigene1956
         Multiple Myeloma  D009101 ERBB2 ncbigene2064
         Multiple Myeloma  D009101 ERBB4 ncbigene2066
         """
         df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_later_year(2013, 2018)
         #print(df_pos_validation)
-        self.assertEqual(6, df_pos_validation.shape[0])
+        self.assertEqual(3, df_pos_validation.shape[0])
 
     def test_get_positive_validation_data_set_1_later_year_2012_2015(self):
         """
