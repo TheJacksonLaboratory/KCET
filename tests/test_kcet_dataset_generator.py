@@ -69,6 +69,62 @@ class TestKCETDatasetGenerator(TestCase):
         #print(df_pos_validation)
         self.assertEqual(3, df_pos_validation.shape[0])
 
+    def test_get_positive_validation_data_set_1_after_2013_from_2015_until_2018(self):
+        """
+        There are three disease-drug links between 2014 and 2018:
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+
+        But,
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        has been studied in phases 1,2,3 too. So, it should not be considered in validation(test) set.
+
+
+        So, there will be:
+        Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+
+        afatinib targets 3 protein kinases: EGFR, ERBB2, ERBB4
+
+        So, there will be 3 kinase-cancer links:
+
+        Multiple Myeloma	D009101  EGFR   ncbigene1956
+        Multiple Myeloma  D009101 ERBB2 ncbigene2064
+        Multiple Myeloma  D009101 ERBB4 ncbigene2066
+        """
+        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year(2013, 2015, 2018)
+        # print(df_pos_validation)
+        self.assertEqual(3, df_pos_validation.shape[0])
+
+    def test_get_positive_validation_data_set_1_after_2013_from_2015_until_2017(self):
+        """
+        There are three disease-drug links between 2014 and 2018:
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+
+        But,
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        has been studied in phases 1,2,3 too. So, it should not be considered in validation(test) set.
+
+
+        So, there will be  only:
+        Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+
+        afatinib targets 3 protein kinases: EGFR, ERBB2, ERBB4
+
+        So, there will be 3 kinase-cancer links:
+
+        Multiple Myeloma	D009101  EGFR   ncbigene1956
+        Multiple Myeloma  D009101 ERBB2 ncbigene2064
+        Multiple Myeloma  D009101 ERBB4 ncbigene2066
+        """
+        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year(2013, 2015, 2017)
+        # print(df_pos_validation)
+        self.assertEqual(3, df_pos_validation.shape[0])
+
     def test_get_positive_validation_data_set_1_later_year_2012_2015(self):
         """
         There are 5 disease-drug links between 2012 and 2015:
@@ -110,6 +166,33 @@ class TestKCETDatasetGenerator(TestCase):
         #print(df_pos_validation)
         self.assertEqual(12, df_pos_validation.shape[0])
 
+    def test_get_positive_validation_data_set_1_2012_2014_2015(self):
+        """
+        There are 2 disease-drug links between 2014 and 2015:
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+
+
+        But,
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        was studied in phase 1,2,3 clinical trials studies.
+
+        So, there is:
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+
+
+        afatinib targets 3 protein kinases: EGFR, ERBB2, ERBB4
+
+        So, there will be 3 kinase-cancer links:
+        Multiple Myeloma	D009101  EGFR   ncbigene1956
+        Multiple Myeloma  D009101 ERBB2 ncbigene2064
+        Multiple Myeloma  D009101 ERBB4 ncbigene2066
+        """
+        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year(2012,2014, 2015)
+        # print(df_pos_validation)
+        self.assertEqual(3, df_pos_validation.shape[0])
+
+
     def test_get_positive_validation_data_set_1_phase4_later_year_2012_2015(self):
         """
         There is one disease-drug link between 2012 and 2015:
@@ -126,6 +209,39 @@ class TestKCETDatasetGenerator(TestCase):
         """
         df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_later_year_phase_4(2012, 2015)
         #print(df_pos_validation)
+        self.assertEqual(0, df_pos_validation.shape[0])
+
+    def test_get_positive_validation_data_set_1_phase4_2012_2014_2015(self):
+        """
+        There is one disease-drug link between 2012 and 2015:
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+
+        But,
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        was studied in phase 1,2,3 clinical trials studies.
+
+
+
+        So, there is no  kinase-cancer link
+
+        """
+        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year_phase_4(2012,2014, 2015)
+        #print(df_pos_validation)
+        self.assertEqual(0, df_pos_validation.shape[0])
+
+    def test_get_positive_validation_data_set_1_phase4_2012_2014_2020(self):
+        """
+        There are is one disease-drug link between 2014 and 2020 of phase 4:
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+
+
+        But,
+        Carcinoma, Non-Small-Cell Lung	D002289	afatinib	Phase 4	2014	2020	NCT04413201;NCT02695290;NCT02208843;NCT04356118;NCT02514174
+        was studied in phase 1,2,3 clinical trials studies.
+
+        """
+        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year_phase_4(
+            2012, 2014, 2020)
         self.assertEqual(0, df_pos_validation.shape[0])
 
     def test_get_positive_validation_data_set_1_phase4_later_year_2013_2018(self):
@@ -185,6 +301,7 @@ class TestKCETDatasetGenerator(TestCase):
         #print(df_neg_validation)
         self.assertEqual(30, df_neg_validation.shape[0])
 
+        ##################################################################################
         ##################################################################################
 
     def test_get_positive_training_data_set_2_2015(self):
