@@ -388,6 +388,33 @@ class TestKCETDatasetGenerator(TestCase):
         #print(df_pos_validation)
         self.assertEqual(5, df_pos_validation.shape[0])
 
+
+    def test_get_positive_validation_data_set_2_later_year_2013_2015_2018(self):
+        """
+        There are 2 disease-drug links between 2015 and 2018:
+        Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+
+
+
+        afatinib targets 3 protein kinases:
+        afatinib	EGFR    ncbigene1956
+        afatinib	ERBB2   ncbigene2064
+        afatinib	ERBB4   ncbigene2066
+
+
+
+        So, there will be 3 kinase-cancer links:
+        Multiple Myeloma	D009101  EGFR   ncbigene1956
+        Multiple Myeloma  D009101 ERBB2 ncbigene2064
+        Multiple Myeloma  D009101 ERBB4 ncbigene2066
+
+        """
+        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year(2013, 2015, 2018)
+        #print(df_pos_validation)
+        self.assertEqual(3, df_pos_validation.shape[0])
+
+
     def test_get_positive_validation_data_set_2_later_year_2013_2020(self):
         """
         There are 6 disease-drug links between 2014 and 2020:
@@ -428,6 +455,39 @@ class TestKCETDatasetGenerator(TestCase):
         """
         df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_later_year(2013, 2020)
         #print(df_pos_validation)
+        self.assertEqual(5, df_pos_validation.shape[0])
+
+    def test_get_positive_validation_data_set_2_later_year_2013_2015_2020(self):
+        """
+        There are 6 disease-drug links between 2015 and 2020:
+        Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+        Breast Neoplasms	D001943	abemaciclib	Phase 4	2019	2021	NCT04707196;NCT03988114;NCT04031885
+
+        There are :
+        Multiple Myeloma	D009101	afatinib	Phase 1	2020	2020	NCT03878524
+        Multiple Myeloma	D009101	afatinib	Phase 2	2015	2016	NCT02693535;NCT04439136;NCT02465060
+        Breast Neoplasms	D001943	abemaciclib	Phase 4	2019	2021	NCT04707196;NCT03988114;NCT04031885
+
+
+        afatinib targets 3 protein kinases:
+        afatinib	EGFR    ncbigene1956
+        afatinib	ERBB2   ncbigene2064
+        afatinib	ERBB4   ncbigene2066
+
+        abemaciclib targets two protein kinases:
+        abemaciclib CDK4 ncbigene1019
+        abemaciclib CDK6 ncbigene1021
+
+        So, there will be 5 kinase-cancer links:
+        Multiple Myeloma	D009101  EGFR   ncbigene1956
+        Multiple Myeloma  D009101 ERBB2 ncbigene2064
+        Multiple Myeloma  D009101 ERBB4 ncbigene2066
+        Breast Neoplasms	D001943 CDK4    ncbigene1019
+        Breast Neoplasms	D001943 CDK6    ncbigene1021
+        """
+        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year(2013, 2015,2020)
+        print(df_pos_validation)
         self.assertEqual(5, df_pos_validation.shape[0])
 
     def test_get_positive_validation_data_set_2_phase_4_later_year_2013_2018(self):
@@ -473,6 +533,28 @@ class TestKCETDatasetGenerator(TestCase):
         Breast Neoplasms	D001943 CDK6    ncbigene1021
         """
         df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_later_year_phase_4(2013, 2020)
+        print(df_pos_validation)
+        self.assertEqual(2, df_pos_validation.shape[0])
+
+    def test_get_positive_validation_data_set_2_years_after_year_phase_4_2013_2016_2020(self):
+        """
+        There is one disease-drug links between 2016 and 2020:
+        Breast Neoplasms	D001943	abemaciclib	Phase 4	2019	2021	NCT04707196;NCT03988114;NCT04031885
+
+
+        So, there is only one link:
+        Breast Neoplasms	D001943	abemaciclib	Phase 4	2019	2021	NCT04707196;NCT03988114;NCT04031885
+
+
+        abemaciclib targets two protein kinases:
+        abemaciclib CDK4 ncbigene1019
+        abemaciclib CDK6 ncbigene1021
+
+        So, there will be 2 kinase-cancer links:
+        Breast Neoplasms	D001943 CDK4    ncbigene1019
+        Breast Neoplasms	D001943 CDK6    ncbigene1021
+        """
+        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year_phase_4(2013,2016, 2020)
         print(df_pos_validation)
         self.assertEqual(2, df_pos_validation.shape[0])
 
