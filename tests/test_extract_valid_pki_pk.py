@@ -24,10 +24,11 @@ class TestExtractValidPkiPk(TestCase):
     def test_alpelisib_PIK3CA(self):
         """
         alpelisib	PIK3CA	25544637
+        alpelisib	PIK3CA	n/a	0.004600446663935	IC50
         """
         df = self.valid_pki_pk
         item = df.loc[(df['PKI'] == 'alpelisib') & (df['PK'] == 'PIK3CA')]
-        self.assertEqual(1, len(item))
+        self.assertEqual(2, len(item))
         row = item.to_numpy()[0]
         self.assertEqual('n/a', row[2])  # We do not have Kd data for this combination
         self.assertEqual('25544637', row[3])
