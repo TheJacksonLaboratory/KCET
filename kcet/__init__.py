@@ -1,16 +1,15 @@
 from .ct_by_phase_parser import CTParserByPhase
 from .kinase_predictor import KinasePredictor
 from .kcet_parser import KcetParser
-from .test_training_prediction_generator import TestTrainingPredictionGenerator
-from .untargeted_kinases import UnTargetedKinases
+from .kcet_dataset_generator import KcetDatasetGenerator
 from .wordvec2cosine import Wordvec2Cosine
+from .pk_pki_filter import PkPkiFilter
 
 
 __all__  = [
     "CTParserByPhase",
     "KinasePredictor",
     "KcetParser",
-    "TestTrainingPredictionGenerator",
-    "UnTargetedKinases",
+    "PkPkiFilter",
     "Wordvec2Cosine"
 ]
