@@ -22,9 +22,7 @@ usage: kcet <command> [<args>]
 The kcet commands are:
    pkpki        list of protein kinases and their inhibitors
    byphase      clinical trials by phase
-   targeted     get list of targeted and untargeted kinases
    pkilist      get list of all protein kinase inhibitors
-   ttp          write positive, negative, and prediction datasets
 
 kinase cancer embedding tool
 
