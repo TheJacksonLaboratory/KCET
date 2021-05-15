@@ -21,7 +21,6 @@ usage: kcet <command> [<args>]
 
 The kcet commands are:
    pkpki        list of protein kinases and their inhibitors
-   byphase      clinical trials by phase
    pkilist      get list of all protein kinase inhibitors
 
 kinase cancer embedding tool
@@ -65,8 +64,7 @@ cd to the ``notebooks`` directory and enter
 ```
 jupyter notebook
 ```
-There are many notebooks to demonstrate and visualize data. To run the machine learning, first go to the
-notebook called ``ExtractDifferenceVectors.ipynb`` and follow directions there to download the required
-embeddings and generate the difference vectors. Then go to the notebook ``RandomForestPredictions.ipynb``
-to do RF learning. Finally, go to the notebook ``RankByDarkAndSLI.ipynb`` to do the final ranking.
+There are many notebooks to demonstrate and visualize data. There are 3 directories for predicting all phases using historical data, phase 4 historical data and novel predictions. To run the machine learning, first go to the notebook starting with ``DatSetGeneration`` and then go to thenotebook starting with ``ExtractDifferenceVectors`` and follow directions there to download the required
+embeddings and generate the difference vectors. Then go to the notebook starting with ``RandomForestPredictions``
+to do RF learning. 
 
