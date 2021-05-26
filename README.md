@@ -64,7 +64,12 @@ cd to the ``notebooks`` directory and enter
 ```
 jupyter notebook
 ```
-There are many notebooks to demonstrate and visualize data. There are 3 directories for predicting 1) all phases using historical data, 2) phase 4 historical data and 3) novel predictions. To run the machine learning, first go to the notebook starting with ``DatSetGeneration`` and then go to the notebook starting with ``ExtractDifferenceVectors`` and follow directions there to download the required
+There are many notebooks to demonstrate and visualize data. There are 3 directories 
+Predicting_links_all_phases, Predicting_links_phase_4 and 
+Novel_Predictions which are for predicting  all phases using historical data,  phase 4 historical data and  novel predictions, respectively. 
+To run the machine learning, first go to the notebook starting with ``DatSetGeneration`` and then go to the notebook starting with ``ExtractDifferenceVectors`` and follow directions there to download the required
 embeddings and generate the difference vectors. Then go to the notebook starting with ``RandomForestPredictions``
 to do RF learning. 
+The directory data_exploration consists jupyter notebook files for visualization, showing
+analogies and cosine similarities between words.
 
