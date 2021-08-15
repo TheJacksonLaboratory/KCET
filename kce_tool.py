@@ -84,8 +84,8 @@ The kcet commands are:
 
     def pkpki(self):
         parser = argparse.ArgumentParser(description='Process PKI/PK data')
-        parser.add_argument('--max_multiplicity', action='store_true', default=5)
-        parser.add_argument('--outfilename', action='store_true', default='input/drug_kinase_links.tsv')
+        parser.add_argument('--max_multiplicity', type=int, default=5)
+        parser.add_argument('--outfilename',  type=str, default='input/drug_kinase_links.tsv')
         args = parser.parse_args(sys.argv[2:])
         print(args.max_multiplicity)
         pkpki = PkPkiFilter()
