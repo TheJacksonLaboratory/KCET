@@ -36,7 +36,7 @@ optional arguments:
 We create the file ``input/drug_kinase_links.tsv``which is obtained by applying the affinity(multiplicity) threshold 0.03
 on data from DrugCentral. The file ``input/drug_kinase_links.tsv`` is a list of protein kinase inhibitors (PKI) that
 have been used to treat cancer. Each PKI is shown together with its known major targets, act-value and a relevant
-PubMed id (PMID).To generate drug_kinase_links.tsv file, use the  following command:
+PubMed id (PMID). There is a limit on the number of PKs that are inhibited per PKI (default=5). To generate drug_kinase_links.tsv file, use the  following command:
 
 ``
  python kce_tool.py pkpki [options]
