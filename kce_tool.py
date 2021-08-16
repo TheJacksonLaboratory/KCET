@@ -62,13 +62,14 @@ The kcet commands are:
         parser = argparse.ArgumentParser(
             description='extract list of protein kinase inhibitors')
         parser.add_argument('-o', '--outfilename', default='protein_kinase_inhibitors.txt', help="outfilename")
+        parser.add_argument('-i', '--inputfilename', default='input/drug_kinase_links.tsv', help="inputfilename")
         args = parser.parse_args(sys.argv[2:])
-        dklinks = 'input/drug_kinase_links.tsv'
+        dklinks = args.inputfilename
         pki_set = set()
         with open(dklinks) as f:
             header = next(f)
             if not header.startswith('PKI'):
-                raise ValueError("Bad header line of drug_kinase_links.tsv: " + header)
+                raise ValueError("Bad header line of {}: ".format(dklinks) + header)
             for line in f:
                 fields = line.rstrip().split('\t')
                 if len(fields) != 4:
