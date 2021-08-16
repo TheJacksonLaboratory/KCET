@@ -40,7 +40,13 @@ PubMed id (PMID). There is a limit on the number of PKs that are inhibited per P
 
 ``
 python kce_tool.py pkpki [options]
+``
+
+``
 --max_multiplicity: Limit on the number of PKs that are inhibited per PKI (default=5)
+``
+
+``
 --outputfilename: The output file name, (default=input/drug_kinase_links.tsv)
 ``
 
