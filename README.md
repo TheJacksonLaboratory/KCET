@@ -39,10 +39,11 @@ have been used to treat cancer. Each PKI is shown together with its known major 
 PubMed id (PMID). There is a limit on the number of PKs that are inhibited per PKI (default=5). To generate drug_kinase_links.tsv file, use the  following command:
 
 ``
- python kce_tool.py pkpki [options]
+python kce_tool.py pkpki [options]
 --max_multiplicity: Limit on the number of PKs that are inhibited per PKI (default=5)
 --outputfilename: The output file name, (default=input/drug_kinase_links.tsv)
 ``
+
 ## Generate list of protein kinase inhibitors
 For the downstream analysis with the ``yactp`` tool, we need to have a file with the 
 name of each PKI on one line and to remove duplicates. To generate this file, enter the following command
