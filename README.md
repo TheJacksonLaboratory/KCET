@@ -63,7 +63,7 @@ This script generates the file ``protein_kinase_inhibitors.txt``
 
 Follow the instructions in the [yactp](https://github.com/monarch-initiative/yactp) repository
 to generate the ``clinical_trials_by_phase.tsv`` file. We use the  ``protein_kinase_inhibitors.txt`` file
-as the input for yactp. After generating the `clinical_trials_by_phase.tsv`` file, we put it in the KCET directory.
+as the input for yactp. 
  
 
 
@@ -76,9 +76,12 @@ jupyter notebook
 There are many notebooks to demonstrate and visualize data. There are 3 directories 
 Predicting_links_all_phases, Predicting_links_phase_4 and 
 Novel_Predictions which are for predicting  all phases using historical data,  phase 4 historical data and  novel predictions, respectively. 
-To run the machine learning, first go to the notebook starting with ``DataSetGeneration`` and then go to the notebook starting with ``ExtractDifferenceVectors`` and follow directions there to download the required
+To run the machine learning, first create a directory called data in the notebooks directory and 
+put the 'clinical_trials_by_phase' file in data directory. Also, upload the embedding files obtained by word embeddings on PubMed abstracts 
+in the data directory in notebooks. Then,  go to the notebook starting with ``DataSetGeneration`` and then go to the notebook starting with ``ExtractDifferenceVectors`` and follow directions there to download the required
 embeddings and generate the difference vectors. Then go to the notebook starting with ``RandomForestPredictions``
 to do RF learning. 
 The directory data_exploration consists jupyter notebook files for visualization, showing
 analogies and cosine similarities between words.
+
 
