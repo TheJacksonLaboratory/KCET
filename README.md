@@ -32,7 +32,7 @@ optional arguments:
   -h, --help  show this help message and exit
 ```
 
-## Geenrate list of protein kinase inhibitors and corresponding protein kinases from DrugCentral
+## Generate list of protein kinase inhibitors and corresponding protein kinases from DrugCentral
 We create the file ``input/drug_kinase_links.tsv``which is obtained by applying the affinity(multiplicity) threshold 0.03
 on data from DrugCentral. The file ``input/drug_kinase_links.tsv`` is a list of protein kinase inhibitors (PKI) that
 have been used to treat cancer. Each PKI is shown together with its known major targets, act-value and a relevant
@@ -63,7 +63,7 @@ This script generates the file ``protein_kinase_inhibitors.txt``
 
 Follow the instructions in the [yactp](https://github.com/monarch-initiative/yactp) repository
 to generate the ``clinical_trials_by_phase.tsv`` file. We use the  ``protein_kinase_inhibitors.txt`` file
-as input for yactp.
+as the input for yactp. After generating the `clinical_trials_by_phase.tsv`` file, we put it in the KCET directory.
  
 
 
@@ -76,7 +76,7 @@ jupyter notebook
 There are many notebooks to demonstrate and visualize data. There are 3 directories 
 Predicting_links_all_phases, Predicting_links_phase_4 and 
 Novel_Predictions which are for predicting  all phases using historical data,  phase 4 historical data and  novel predictions, respectively. 
-To run the machine learning, first go to the notebook starting with ``DatSetGeneration`` and then go to the notebook starting with ``ExtractDifferenceVectors`` and follow directions there to download the required
+To run the machine learning, first go to the notebook starting with ``DataSetGeneration`` and then go to the notebook starting with ``ExtractDifferenceVectors`` and follow directions there to download the required
 embeddings and generate the difference vectors. Then go to the notebook starting with ``RandomForestPredictions``
 to do RF learning. 
 The directory data_exploration consists jupyter notebook files for visualization, showing
