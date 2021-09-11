@@ -90,11 +90,11 @@ class KcetDatasetGenerator:
     def get_data_years_after_target_year_upto_later_year_phase_4(self, target_year: int, mid_year:int, factor: int = 10,
                                                            num_years_later: int = 1) -> Tuple[pd.DataFrame]:
         """
-        Get positive and negative data after the target year and upto a later year indicated by the argument. The positive training and positive validation are
-        links from phase 4.
+        Get positive and negative data after the target year and upto a later year indicated by the argument. 
+        The positive training and positive validation are links from phase 4.
         """
-        positive_training_df = self._get_positive_training_data_set(year=target_year)
-        negative_training_df = self._get_negative_training_dataset(pos_training_df=positive_training_df,
+        pos_train_df = self._get_positive_training_data_set(year=target_year)
+        neg_train_df = self._get_negative_training_dataset(pos_training_df=pos_train_df,
                                                                    year=target_year, factor=factor)
         current_year = self.get_current_year()
         new_target_year = mid_year + num_years_later
@@ -102,9 +102,9 @@ class KcetDatasetGenerator:
         if target_year < current_year and mid_year < current_year and new_target_year < current_year:  # historical prediction
             positive_validation_df = self._get_positive_validation_data_set_years_after_target_year_phase_4(old_target_year=target_year, mid_year = mid_year,
                 new_target_year=new_target_year)  # get phase 4 for the years after the target year
-            negative_validation_df = self._get_negative_validation_data_set(negative_df=negative_training_df,
+            negative_validation_df = self._get_negative_validation_data_set(negative_df=neg_train_df,
                                                                             year=target_year)
-            return positive_training_df, negative_training_df, positive_validation_df, negative_validation_df
+            return pos_train_df, neg_train_df, positive_validation_df, negative_validation_df
         else:
             raise Exception("target year and the future year must be before  the current year! ")
 
@@ -142,15 +142,16 @@ class KcetDatasetGenerator:
 
         kinase_list = []
         cancer_list = []
+        n_skipped_link = 0
         for link in positive_validation_links:
             if link in all_phases_positive_links:
-                print("Skipping  link (%s,%s) since we found it in the positive all phases set" % (
-                    link.kinase,link.cancer))
+                n_skipped_link += 1
             else:
                 kinase = link.kinase
                 cancer = link.cancer
                 kinase_list.append(kinase)
                 cancer_list.append(cancer)
+        logging.info("Skipped %d links that were found in the positive all phases set (expected behavior)" % n_skipped_link)
         df_pos_validation = pd.DataFrame(list(zip(cancer_list,kinase_list)), columns=['mesh_id', 'gene_id'])
         return df_pos_validation
 
@@ -168,15 +169,16 @@ class KcetDatasetGenerator:
 
         kinase_list = []
         cancer_list = []
+        n_skipped_link = 0
         for link in positive_validation_links:
                 if link in all_phases_positive_links:
-                    print("Skipping  link (%s,%s) since we found it in the positive all phases set" % (
-                        link.kinase, link.cancer))
+                    n_skipped_link += 1
                 else:
                     kinase = link.kinase
                     cancer = link.cancer
                     kinase_list.append(kinase)
                     cancer_list.append(cancer)
+        logging.info("Skipped %d links that were found in the positive all phases set (expected behavior)" % n_skipped_link)
         df_pos_validation = pd.DataFrame(list(zip(cancer_list, kinase_list)), columns=['mesh_id', 'gene_id'])
         return df_pos_validation
 
@@ -196,6 +198,7 @@ class KcetDatasetGenerator:
         n_neg_examples = len(negative_df)
         pretarget_negative_links = Link.fromDataFrameToLinkSet(negative_df)
         negative_links = set()
+        n_skipped_link = 0
         i = 0  # use i to limit the number of attempts in case there is some problem
         while len(negative_links) < n_neg_examples and i < 1e6:
             i += 1
@@ -203,19 +206,17 @@ class KcetDatasetGenerator:
             random_kinase = random.choice(kinase_list)
             randomLink = Link(kinase=random_kinase, cancer=random_cancer)
             if randomLink in positive_links:
-                print("Skipping random link (%s,%s) since we found it in the positive set" % (
-                    random_kinase, random_cancer))
+                n_skipped_link += 1
                 continue
             if randomLink in pretarget_negative_links:
-                print("Skipping random link (%s,%s) since we already added it to the negative set" % (
-                    random_kinase, random_cancer))
+                n_skipped_link += 1
                 continue
             if randomLink in negative_links:
-                print("Skipping random link (%s,%s) since we already added it to the negative set" % (
-                    random_kinase, random_cancer))
+                n_skipped_link += 1
                 continue
             negative_links.add(randomLink)
-        print("[INFO] We generated a negative set with %d examples (the positive set has %d)" % (
+        logging.info("Skipped %d links that were found previously (expected behavior)" % n_skipped_link)
+        print("[INFO] We generated a negative validation set with %d examples (the positive set has %d)" % (
             len(negative_links), len(positive_links)))
         # format as a pandas dataframe
         negative_dict_list = [l.to_dict() for l in negative_links]
@@ -236,22 +237,24 @@ class KcetDatasetGenerator:
         n_pos_examples = len(positive_training_links) # number of links in positive training set
         n_neg_examples = n_pos_examples * factor
         negative_links = set()
+        n_skipped_link = 0
         i = 0  # use i to limit the number of attempts in case there is some problem
         while len(negative_links) < n_neg_examples and i < 1e6:
             i += 1
             random_cancer = random.choice(cancer_id_list)
             random_kinase = random.choice(kinase_list)
             randomLink = Link(kinase=random_kinase, cancer=random_cancer)
-            if randomLink in positive_links: # check if the random link is in any of pahses 1,2,3,4 or not. If yes, generate another link
-                print("Skipping random link(%s,%s) since we found it in the positive set" % (
-                    random_kinase, random_cancer))
+            # Do not add a link from the positive set to the negative set 
+            # Note that this can happen by chance and is not worrisome, but we log it
+            if randomLink in positive_links: 
+                n_skipped_link += 1
                 continue
             if randomLink in negative_links:
-                print("Skipping random link (%s,%s) since we already added it to the negative set" % (
-                    random_kinase, random_cancer))
+                n_skipped_link += 1
                 continue
             negative_links.add(randomLink)
-        print("[INFO] We generated a negative set with %d examples (the positive set has %d)" % (
+        logging.info("Skipped %d random links that were found in previously defined sets (expected behavior)" % n_skipped_link)
+        print("[INFO] We generated a negative training set with %d examples (the positive set has %d)" % (
             len(negative_links), len(positive_links)))
         # format as a pandas dataframe
         negative_dict_list = [l.to_dict() for l in negative_links]

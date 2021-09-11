@@ -133,3 +133,8 @@ dmypy.json
 /clinical_trials_by_phase.tsv
 notebooks/data
 notebooks/*.tsv
+
+notebooks/Predicting_links_all_phases/negative_training*
+notebooks/Predicting_links_all_phases/negative_validation*
+notebooks/Predicting_links_all_phases/positive_training*
+notebooks/Predicting_links_all_phases/positive_validation*

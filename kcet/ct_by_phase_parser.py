@@ -155,9 +155,7 @@ class CTParserByPhase:
         trials = self._get_ct_by_phase()
         # sanity check-make a set of the medications
         medications = {t.drug for t in trials}
-        print("[INFO] Parsed data for the following medications:")
-        for med in medications:
-            print("[INFO] %s" % med)
+        print("[INFO] Parsed data for %d medications." % len(medications))
         pki_dict = defaultdict(KinaseInhibitor)
         validation_pki_dict = defaultdict(KinaseInhibitor)
         for t in trials:
