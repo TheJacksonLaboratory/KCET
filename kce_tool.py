@@ -6,7 +6,7 @@ from kcet import CTParserByPhase, PkPkiFilter
 
 class KinaseCancerEmbeddingTool(object):
     """
-    This class uses a dispathcer pattern to implement one of a list of subcommands used by
+    This class uses a dispatcher pattern to implement one of a list of subcommands used by
     the KCET (KinaseCancerEmbeddingTool) project.
     """
 

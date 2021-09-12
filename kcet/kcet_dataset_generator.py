@@ -70,7 +70,8 @@ class KcetDatasetGenerator:
                                                    num_years_later: int = 1) -> \
             Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Get positive and negative training for the target year and positive and negative validation for num_years_later years later than the target year.
+        Get positive and negative training for the target year and positive and negative validation 
+        for num_years_later years later than the target year.
         """
         positive_training_df = self._get_positive_training_data_set(year=target_year)
         negative_training_df = self._get_negative_training_dataset(pos_training_df=positive_training_df,

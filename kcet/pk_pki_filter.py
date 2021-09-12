@@ -19,7 +19,12 @@ logger.addHandler(stdout_handler)
 
 class PkPki:
     """
-    This class keeps track of a protein kinases (PKs) to protein kinase inhibitor (PKI) link
+    This class models a protein kinase (PKs) to protein kinase inhibitor (PKI) link
+    Attributes:
+        _pki     A protein-kinase inhibitor (PKI).
+        _pk  A protein kinase that is inhibited by the PKI.
+        _act_value  activity (less than 30 considered active)
+        _pmid   A PubMed id for the PKI-PK link
     """
 
     def __init__(self, pki: str, pk: str, act_val: float, pmid: str):
@@ -94,8 +99,7 @@ class PkPkiFilter:
     And, for drugs with no PKs below the cutoff, let's relax the cutoff in 1 log10 increments, so 300 nM and if still
     no kinases, go to 3 uM.  I doubt that would be the case - and I would certainly not see the value in the 3 uM scenario.
     We use a file with Kds from DrugCentral.
-    Note that the Act_Value is micromolar.  Thues, the appropriate cut-off filter in this column should be 0.03 because
-    0.03 micromolar = 30 nanomolar.
+    Note that the Act_Value is micromolar, and thus, the appropriate cut-off is 0.03, i.e., 0.03 micromolar = 30 nanomolar.
     """
 
     def __init__(self):

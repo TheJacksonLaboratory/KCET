@@ -12,6 +12,11 @@ from .kinase_inhibitor import KinaseInhibitor
 class Entry:
     """
     Simple class representing one line in the drug_kinase_links.tsv file
+    Attributes:
+        _pki     A protein-kinase inhibitor (PKI).
+        _pk  A protein kinase that is inhibited by the PKI.
+        _act_value  activity (less than 30 considered active)
+        _pmid   A PubMed id for the PKI-PK link
     """
 
     def __init__(self, line: str) -> None:
@@ -31,7 +36,7 @@ class Entry:
             return False
 
     def __hash__(self):
-        return hash((self._pki, self._pk, self._act_value,self._pmid))
+        return hash((self._pki, self._pk, self._act_value, self._pmid))
 
     @property
     def pki(self) -> str:
@@ -43,13 +48,15 @@ class Entry:
 
 
 class CTParserByPhase:
+    """
+    A parser for the clinical_trials_data file that is produced by yactp.  (https://github.com/monarch-initiative/yactp).
+    """
     def __init__(self,
                  clinical_trials: str,
                  year: int = None):
         """
         :param clinical_trials_data_path: This is the output file from yactp.  (https://github.com/monarch-initiative/yactp).
-        :param drug_kinase_links_data_path: This is a curated list of drug and kinase links.
-        :param date: The date( year) that the drug was tested on diseases.
+        :param year: The target year for analysis -- take all data up to this year
         The output file contains kinase-cancer links corresponding to the specific phase that the drugs were tested has
         before that year.
         """

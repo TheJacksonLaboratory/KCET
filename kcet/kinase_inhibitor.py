@@ -24,31 +24,46 @@ class Cancer:
 
 
 class Study:
-    def __init__(self, nct, phase, year) -> None:
-        
+    """
+    A simple class that represents one study as parsed from ClinicalTrials.org via the YATCP file
+    Attributes:
+        _nct    National Clinical Trial number from ClinicalTrials.org.
+        _phase  Clinical trial phase (1, 2, 3, 4)
+        _year  start year of the study
+    """
+    def __init__(self, nct, phase: str, year: int) -> None:
+        # sanity checks
+        expected_phases = {"Phase 1", "Phase 2", "Phase 3", "Phase 4"}
+        if not phase in expected_phases:
+            raise ValueError("Invalid phase \"%s\"" % phase)
+        if not isinstance(year, int):
+            raise ValueError("Invalid year " + year)
         self._nct = nct
         self._phase = phase
         self._year = year # start year
 
     @property
-    def nct(self):
+    def nct(self) -> str:
         return self._nct
 
     @property
-    def phase(self):
+    def phase(self) -> str:
         return self._phase
 
     @property
-    def year(self):
+    def year(self) -> int:
         return self._year
 
-    def is_phase_4(self):
+    def is_phase_4(self) -> bool:
         return self._phase == "Phase 4"
 
 
 class KinaseInhibitor:
     """
     Represents one kinase inhibitor as well as the cancers and phases of all associated clinical trials.
+    Attributes:
+        _name    Name of the protein kinase inhibitor (PKI), e.g., sorafenib.
+        _cancerdict  dictionary of cancers for which this PKI has been used for a clinical trial.
     """
     def __init__(self, name:str) -> None:
         self._name = name
@@ -61,7 +76,6 @@ class KinaseInhibitor:
         c = self._cancerdict.get(mesh_id)
         c.add_study(nct=nct, phase=phase,year=year)
         
-
     def get_data_frame_all_phases(self):
         list_of_dicts = []
         pki = self._name
@@ -102,7 +116,4 @@ class KinaseInhibitor:
                         }
                         list_of_dicts.append(d)
         return list_of_dicts
-
-
-
-        
+  
