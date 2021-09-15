@@ -217,7 +217,7 @@ class KcetDatasetGenerator:
                 continue
             negative_links.add(randomLink)
         logging.info("Skipped %d links that were found previously (expected behavior)" % n_skipped_link)
-        print("[INFO] We generated a negative validation set with %d examples (the positive set has %d)" % (
+        logging.info("We generated a negative validation set with %d examples (the positive set has %d)" % (
             len(negative_links), len(positive_links)))
         # format as a pandas dataframe
         negative_dict_list = [l.to_dict() for l in negative_links]
@@ -255,7 +255,7 @@ class KcetDatasetGenerator:
                 continue
             negative_links.add(randomLink)
         logging.info("Skipped %d random links that were found in previously defined sets (expected behavior)" % n_skipped_link)
-        print("[INFO] We generated a negative training set with %d examples (the positive set has %d)" % (
+        logging.info("[INFO] We generated a negative training set with %d examples (the positive set has %d)" % (
             len(negative_links), len(positive_links)))
         # format as a pandas dataframe
         negative_dict_list = [l.to_dict() for l in negative_links]

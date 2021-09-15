@@ -5,7 +5,10 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
+
+import logging
+logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
 class KcetRandomForest:
     """
@@ -54,12 +57,8 @@ class KcetRandomForest:
         # Prepare for random forest validation
         n_pos_test = pos_validation_vectors.shape[0]
         n_neg_test = neg_validation_vectors.shape[0]
-        print("Setting up RF classification with pos train: {}, neg train {}, pos validation {}, neg validation {}"
+        logging.info("Setting up RF classification with pos train: {}, neg train {}, pos validation {}, neg validation {}"
             .format(n_pos_train, n_neg_train, n_pos_test, n_neg_test))
-        print("pos train vectors shape", pos_train_vectors.shape)
-        print("neg train vectors shape", neg_train_vectors.shape)
-        print("X train vectors shape", X_train.shape)
-        print("Y train vectors shape", y_train.shape)
         X_test = pd.concat([pos_validation_vectors, neg_validation_vectors])
         y_test = np.concatenate((np.ones(n_pos_test), np.zeros(n_neg_test)))
         # Perform random grid search for best parameters using the training data
@@ -71,7 +70,7 @@ class KcetRandomForest:
         # Now estimate the performance on the held out validation data
         y_pred = best_model.predict(X_test)
         yproba = best_model.predict_proba(X_test)[::,1]
-        return y_pred, yproba
+        return y_pred, y_test, yproba, n_pos_test
 
 
 

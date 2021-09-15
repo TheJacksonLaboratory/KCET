@@ -1,10 +1,9 @@
-
-from numpy.lib.function_base import median
 import pandas as pd 
 import numpy as np
 import os
 from collections import defaultdict
-
+import logging
+logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
 
 class KinasePredictor:
@@ -21,8 +20,7 @@ class KinasePredictor:
                 word = line[2:-3]
                 word_list.append(word)
         self._embeddings_df = pd.DataFrame(data=embedding,index = word_list)
-        print("")
-        print("[INFO] We ingested %d labeled word vectors from %s and %s" % (len(self._embeddings_df), embeddings, words))
+        logging.info("We ingested %d labeled word vectors from %s and %s" % (len(self._embeddings_df), embeddings, words))
         path = os.path.dirname(os.path.abspath(__file__)) 
         parent_dir = os.path.abspath(os.path.join(path, os.pardir))
         prot_kinase_tsv = os.path.join(parent_dir, "input/prot_kinase.tsv")
@@ -35,7 +33,7 @@ class KinasePredictor:
             ncbigene = kinase_gene_id.iloc[i][2]
             ncbigene_id = "ncbigene" + str(ncbigene)
             self._ncbigene2symbol_map[ncbigene_id] = gene_symbol
-        print("[INFO] We ingested %d symbol/NCBI gene id mappings from %s" % (len(self._ncbigene2symbol_map), prot_kinase_tsv))
+        logging.info("We ingested %d symbol/NCBI gene id mappings from %s" % (len(self._ncbigene2symbol_map), prot_kinase_tsv))
         neoplasm_labels_tsv = os.path.join(parent_dir, "input/neoplasms_labels.tsv")
         disease_mesh = pd.read_csv(neoplasm_labels_tsv,  sep= "\t", header = None)
         self._meshid2disease_map = defaultdict()
@@ -45,8 +43,7 @@ class KinasePredictor:
             mesh_id = "mesh" + mesh_first_letter + mesh[1:]
             disease = disease_mesh.iloc[i][1]
             self._meshid2disease_map[mesh_id] = disease
-        print("[INFO] We ingested %d meshId/disease mappings from %s" % (len(self._meshid2disease_map), neoplasm_labels_tsv))
-        print("")
+        logging.info("We ingested %d meshId/disease mappings from %s" % (len(self._meshid2disease_map), neoplasm_labels_tsv))
 
 
     def get_words(self):
@@ -100,9 +97,9 @@ class KinasePredictor:
                 df.loc[label] = diff_kinase_mesh
             i += 1
             if i % 10000 == 0 and i > 0:
-                print("[INFO] Created %d/%d (%.1f%%) difference vectors" % (i, total, 100.0*i/total))
-        print("[INFO] Extracted %s kinase-cancer difference vectors" % len(df))
-        print("[INFO]\tInitial data: %d examples" % len(examples))
-        print("[INFO]\tCould not identify %d gene ids" % len(unidentified_genes))
-        print("[INFO]\tCould not identify %d MeSH ids" % len(unidentified_cancers))
+                logging.info("Created %d/%d (%.1f%%) difference vectors" % (i, total, 100.0*i/total))
+        logging.info("Extracted %s kinase-cancer difference vectors" % len(df))
+        logging.info("Initial data: %d examples" % len(examples))
+        logging.info("Could not identify %d gene ids" % len(unidentified_genes))
+        logging.info("Could not identify %d MeSH ids" % len(unidentified_cancers))
         return df
