@@ -71,6 +71,7 @@ class KcetRandomForest:
         # Now estimate the performance on the held out validation data
         y_pred = best_model.predict(X_test)
         yproba = best_model.predict_proba(X_test)[::,1]
+        return y_pred, yproba
 
 
 
