@@ -37,38 +37,42 @@ class KcetRandomForest:
         num_years_after_the_mid_year = 1
         creates test tests from 2019 to 2020.
         """
+        # The following four data frames contain the names of the cancers and protein kinases and other columns.
+        # 
         pos_train_df, neg_train_df, pos_validation_df, neg_validation_df = \
             self._data_generator.get_data_years_after_target_year_upto_later_year(target_year=self._target_year, mid_year = mid_year, num_years_later= num_years_later)
-        #diff_vectors_pos_validation = pd.read_pickle(positive_validation_pickle_path)
-        #diff_vectors_neg_validation = pd.read_pickle(negative_validation_pickle_path)
-        #diff_vectors_pos_training = pd.read_pickle(positive_train_pickle_path)
-        #diff_vectors_neg_training = pd.read_pickle(negative_train_pickle_path)
-        # The following gets the names of the vectors
-        X_train = pd.concat([pos_train_df, neg_train_df])
-        n_pos_train = pos_train_df.shape[0]
-        n_neg_train = neg_train_df.shape[0]
-        print(pos_train_df.head())
-
-        #print("Total training vectors: %d" % len(X_train))
+        # Now we need to extract the corresponding embedded vectors
+        pos_train_vectors = self._predictor.get_disease_kinase_difference_vectors(pos_train_df)
+        neg_train_vectors = self._predictor.get_disease_kinase_difference_vectors(neg_train_df)
+        pos_validation_vectors = self._predictor.get_disease_kinase_difference_vectors(pos_validation_df)
+        neg_validation_vectors = self._predictor.get_disease_kinase_difference_vectors(neg_validation_df)
+        # Prepare for random forest training
+        n_pos_train = pos_train_vectors.shape[0]
+        n_neg_train = neg_train_vectors.shape[0]
+        X_train = pd.concat([pos_train_vectors, neg_train_vectors])
         y_train = np.concatenate((np.ones(n_pos_train), np.zeros(n_neg_train)))
-        X_test = pd.concat([pos_validation_df, neg_validation_df])
-        # print("Total test vectors: %d" % len(X_test))
-        n_pos_test = pos_validation_df.shape[0]
-        n_neg_test = neg_validation_df.shape[0]
+        # Prepare for random forest validation
+        n_pos_test = pos_validation_vectors.shape[0]
+        n_neg_test = neg_validation_vectors.shape[0]
+        print("Setting up RF classification with pos train: {}, neg train {}, pos validation {}, neg validation {}"
+            .format(n_pos_train, n_neg_train, n_pos_test, n_neg_test))
+        print("pos train vectors shape", pos_train_vectors.shape)
+        print("neg train vectors shape", neg_train_vectors.shape)
+        print("X train vectors shape", X_train.shape)
+        print("Y train vectors shape", y_train.shape)
+        X_test = pd.concat([pos_validation_vectors, neg_validation_vectors])
         y_test = np.concatenate((np.ones(n_pos_test), np.zeros(n_neg_test)))
-        # print("Total test labels: %d" % len(y_test))
+        # Perform random grid search for best parameters using the training data
         random_grid = KcetRandomForest._init_random_grid()
-
         rf = RandomForestClassifier()
         rf_random = RandomizedSearchCV(estimator = rf, param_distributions = random_grid, n_iter = 1, cv = 10, random_state=42)
         rf_random.fit(X_train,y_train)
         best_model = rf_random.best_estimator_
-
+        # Now estimate the performance on the held out validation data
         y_pred = best_model.predict(X_test)
         yproba = best_model.predict_proba(X_test)[::,1]
 
 
-    def _get_positive_example_vectors(self):
 
 
 

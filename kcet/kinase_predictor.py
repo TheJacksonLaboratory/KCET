@@ -72,12 +72,12 @@ class KinasePredictor:
             raise ValueError("Input dataframe must contain a column called gene_id")
         if not "mesh_id" in examples.columns:
             raise ValueError("Input dataframe must contain a column called mesh_id")
-        if len(examples.columns) != 2:
-            raise ValueError("Input dataframe must have exactly two columns")
+        # if len(examples.columns) != 2:
+        #    raise ValueError("Input dataframe must have exactly two columns")
         df = pd.DataFrame(columns = self._embeddings_df.columns)
         total = len(examples.index)
         if total==0:
-            raise ValueError("Attempt to get differnece vectors from empty data frame")
+            raise ValueError("Attempt to get difference vectors from empty data frame")
         i = 0
         for _, row in examples.iterrows(): 
             ncbigene_id = row["gene_id"]
