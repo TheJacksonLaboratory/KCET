@@ -69,6 +69,20 @@ as the input for yactp.
 
 # Running the notebooks
 
+The easiest way to ensure that the notebooks can be run with a kernel that has all of the required packages is shown in the following.
+
+```
+$ virtualenv mykern
+$ source mykern/bin/activate
+(mykern) $ pip install -r requirments
+(mykern) $ pip install jupyter
+(mykern) $ ipython kernel install --name "local-venv" --user
+(mykern) $ jupyter-lab
+```
+
+Open a notebook, and choose ``local-venv`` to start the kernel.
+
+
 cd to the ``notebooks`` directory and enter
 ```
 jupyter notebook
