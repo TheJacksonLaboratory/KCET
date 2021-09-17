@@ -1,0 +1,10 @@
+cell
+patient
+meshd009369
+study
+1
+0
+case
+2
+use
+treatment

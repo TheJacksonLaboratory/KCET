@@ -6,12 +6,16 @@ from unittest import TestCase
 class TestKCETDatasetGenerator(TestCase):
     @classmethod
     def setUpClass(cls):
+        """
+        Set up small fake dataset for testing
+        """
         current_dir = os.path.dirname(__file__)
-        ct_by_phase_path_1 = os.path.join(current_dir, 'data', "small_ct_by_phase.tsv")
-        cls.kcet_data_generator_1 = KcetDatasetGenerator(clinical_trials=ct_by_phase_path_1)
-
+        ct_by_phase_path_1 = os.path.join(current_dir, 'data', 'small_ct_by_phase.tsv')
+        embeddings = os.path.join(current_dir, 'data', 'embeddings10.npy')
+        words = os.path.join(current_dir, 'data', 'words10.txt')
+        cls.kcet_data_generator_1 = KcetDatasetGenerator(clinical_trials=ct_by_phase_path_1, embeddings=embeddings, words=words)
         ct_by_phase_path_2 = os.path.join(current_dir, 'data', "small_ct_by_phase_2.tsv")
-        cls.kcet_data_generator_2 = KcetDatasetGenerator(clinical_trials=ct_by_phase_path_2)
+        cls.kcet_data_generator_2 = KcetDatasetGenerator(clinical_trials=ct_by_phase_path_2, embeddings=embeddings, words=words)
 
     def test_get_positive_training_data_set_1_2015(self):
         """
