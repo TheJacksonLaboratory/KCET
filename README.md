@@ -83,10 +83,6 @@ $ source mykern/bin/activate
 Open a notebook, and choose ``local-venv`` to start the kernel.
 
 
-cd to the ``notebooks`` directory and enter
-```
-jupyter notebook
-```
 There are many notebooks to demonstrate and visualize data. There are 3 directories 
 Predicting_links_all_phases, Predicting_links_phase_4 and 
 Novel_Predictions which are for predicting  all phases using historical data,  phase 4 historical data and  novel predictions, respectively. 

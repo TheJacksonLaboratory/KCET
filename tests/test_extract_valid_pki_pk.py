@@ -18,7 +18,7 @@ class TestExtractValidPkiPk(TestCase):
         item = df.loc[(df['PKI'] == 'afatinib') & (df['PK'] == 'EGFR')]
         self.assertEqual(1, len(item))
         row = item.to_numpy()[0]
-        self.assertAlmostEqual(0.0001, float(row[2]))
+        self.assertAlmostEqual(0.0001, float(row[0]))
         self.assertEqual('18408761', row[3])
 
     def test_alpelisib_PIK3CA(self):
@@ -30,7 +30,9 @@ class TestExtractValidPkiPk(TestCase):
         item = df.loc[(df['PKI'] == 'alpelisib') & (df['PK'] == 'PIK3CA')]
         self.assertEqual(2, len(item))
         row = item.to_numpy()[0]
-        self.assertEqual('n/a', row[2])  # We do not have Kd data for this combination
+        print(row)
+        print("GGGGGGGGGG")
+        self.assertEqual('n/a', row[0])  # We do not have Kd data for this combination
         self.assertEqual('25544637', row[3])
 
     def test_apatinib_KIT_removed(self):
