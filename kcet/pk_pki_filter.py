@@ -6,7 +6,7 @@ import logging
 import sys
 
 
-f_handler = logging.FileHandler('pk_pki.log')
+f_handler = logging.FileHandler('kcet.log')
 f_handler.setLevel(logging.INFO)
 f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 f_handler.setFormatter(f_format)
