@@ -1,7 +1,9 @@
 import random
 import pandas as pd
+import numpy as np
 import datetime
 from typing import List, Tuple
+import os
 import logging
 logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
@@ -51,7 +53,7 @@ class KcetDatasetGenerator:
     Class to generate test, training, and prediction files.
     """
 
-    def __init__(self, clinical_trials: str) -> None:
+    def __init__(self, clinical_trials: str, embeddings: str, words: str) -> None:
         kcetParser = KcetParser()
         self._pki_to_kinase_dict = kcetParser.get_pki_to_kinase_list_dict()
         self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()
@@ -59,6 +61,33 @@ class KcetDatasetGenerator:
         parser = CTParserByPhase(clinical_trials=clinical_trials)
         self._df_allphases = parser.get_all_phases()  # all positive data, phase 1,2,3,4
         self._df_phase4 = parser.get_phase_4()  # all positive data, phase 4 only
+        ## add the embeddings
+        if not os.path.exists(embeddings):
+            raise FileNotFoundError("Could not find embedding file at %s" % embeddings)
+        if not os.path.exists(words):
+            raise FileNotFoundError("Could not find words file at %s" % words)
+        embedding = np.load(embeddings, mmap_mode=None, allow_pickle=False, fix_imports=True, encoding='ASCII')
+        word_list = []
+        with open(words) as f:
+            for line in f:
+                word = line[2:-3]
+                word_list.append(word)
+        self._embeddings_df = pd.DataFrame(data=embedding,index = word_list)
+        logging.info("We ingested %d labeled word vectors from %s and %s" % (len(self._embeddings_df), embeddings, words))
+        self._ncbigene2symbol_map = kcetParser.get_id_to_symbol_map()
+        logging.info("We ingested %d symbol/NCBI gene id mappings" % (len(self._ncbigene2symbol_map)))
+        self._meshid2disease_map = kcetParser.get_mesh_to_disease_map()
+        logging.info("We ingested %d meshId/disease mapping" % (len(self._meshid2disease_map)))
+
+    def get_words(self):
+        return self._embeddings_df.index
+
+    def get_embeddings(self) -> pd.DataFrame :
+        """
+        return a Pandas dataframe whose index is the words, and whose columns are the dimensions of the embeddings
+        """
+        return self._embeddings_df
+
 
     def get_current_year(self):
         now = datetime.datetime.now()  # default to current year
@@ -277,3 +306,53 @@ class KcetDatasetGenerator:
                     continue  # Do not include positive links in the prediction set
                 prediction_list.append(L.to_dict())
         return pd.DataFrame(prediction_list)
+
+
+    def get_disease_kinase_difference_vectors(self, examples: pd.DataFrame) -> pd.DataFrame:
+        """
+        The input is a dataframe with protein kinases (NCBI gene ids) and cancers (MeSH id)
+        This function finds the embedded vectors for the genes and cancers, it substracts the
+        cancer vector from the kinase vector, and it returns a data frame with these vectors.
+        This method assumees that the input dataframe contains columns called gene_id and mesh_id and will
+        fail if this is not the case
+        """
+        unidentified_genes = set()
+        unidentified_cancers = set()
+        if not "gene_id" in examples.columns:
+            raise ValueError("Input dataframe must contain a column called gene_id")
+        if not "mesh_id" in examples.columns:
+            raise ValueError("Input dataframe must contain a column called mesh_id")
+        # if len(examples.columns) != 2:
+        #    raise ValueError("Input dataframe must have exactly two columns")
+        df = pd.DataFrame(columns = self._embeddings_df.columns)
+        total = len(examples.index)
+        if total==0:
+            raise ValueError("Attempt to get difference vectors from empty data frame")
+        i = 0
+        for _, row in examples.iterrows(): 
+            ncbigene_id = row["gene_id"]
+            mesh_id = row["mesh_id"]
+            ncbigene_id_embedding = None
+            mesh_id_embedding = None
+            if ncbigene_id in self._embeddings_df.index:
+                ncbigene_id_embedding = self._embeddings_df.loc[ncbigene_id]
+            else:
+                unidentified_genes.add(ncbigene_id)
+            if mesh_id in self._embeddings_df.index:
+                mesh_id_embedding = self._embeddings_df.loc[mesh_id]
+            else:
+                unidentified_cancers.add(mesh_id)
+            if ncbigene_id_embedding is not None and mesh_id_embedding is not None:     
+                diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
+                #diff_kinase_mesh_list_pos_train.append(diff_kinase_mesh)
+                #diff_index_pos_train.append(ncbigene_id + "," + mesh_id)
+                label = "%s-%s" % (ncbigene_id, mesh_id)
+                df.loc[label] = diff_kinase_mesh
+            i += 1
+            if i % 10000 == 0 and i > 0:
+                logging.info("Created %d/%d (%.1f%%) difference vectors" % (i, total, 100.0*i/total))
+        logging.info("Extracted %s kinase-cancer difference vectors" % len(df))
+        logging.info("Initial data: %d examples" % len(examples))
+        logging.info("Could not identify %d gene ids" % len(unidentified_genes))
+        logging.info("Could not identify %d MeSH ids" % len(unidentified_cancers))
+        return df
