@@ -1,14 +1,15 @@
 import random
+from .kcet_parser import KcetParser
+from .ct_by_phase_parser import CTParserByPhase
+
 import pandas as pd
 import numpy as np
 import datetime
-from typing import List, Tuple
+from typing import Set, Tuple
 import os
 import logging
-logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
-from .kcet_parser import KcetParser
-from .ct_by_phase_parser import CTParserByPhase
+logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
 
 class Link:
@@ -41,7 +42,7 @@ class Link:
         return self._cancer + "-" + self._kinase
 
     @staticmethod
-    def fromDataFrameToLinkSet(df: pd.DataFrame) -> List:
+    def fromDataFrameToLinkSet(df: pd.DataFrame) -> Set:
         linkset = set()
         for index, row in df.iterrows():
             m = row['mesh_id']
@@ -49,6 +50,12 @@ class Link:
             L = Link(kinase=g, cancer=m)
             linkset.add(L)
         return linkset
+
+
+def get_current_year():
+    now = datetime.datetime.now()  # default to current year
+    year = now.year
+    return year
 
 
 class KcetDatasetGenerator:
@@ -63,15 +70,15 @@ class KcetDatasetGenerator:
     For some experiments, we restrict our analysis to phase 4 clinical trials. For others, we take all phases.
     Functions such as get_training_and_test_data refer to all phases; get_training_and_test_data_phase4 is restricted to phase 4.
     """
+
     def __init__(self, clinical_trials: str, embeddings: str, words: str) -> None:
         kcetParser = KcetParser()
         self._pki_to_kinase_dict = kcetParser.get_pki_to_kinase_list_dict()
         self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()
         self._mesh_list = kcetParser.get_mesh_id_list()
         parser = CTParserByPhase(clinical_trials=clinical_trials)
-        self._df_allphases = parser.get_all_phases()  # all positive data, phase 1,2,3,4
-        self._df_phase4 = parser.get_phase_4()  # all positive data, phase 4 only
-        print("SSSS", type(self._df_allphases))
+        self._df_allphases = parser.get_all_phases(removeRedundantEntries=True)  # all positive data, phase 1,2,3,4
+        self._df_phase4 = parser.get_phase_4(removeRedundantEntries=True)  # all positive data, phase 4 only
         # add the embeddings
         if not os.path.exists(embeddings):
             raise FileNotFoundError("Could not find embedding file at %s" % embeddings)
@@ -83,8 +90,9 @@ class KcetDatasetGenerator:
             for line in f:
                 word = line[2:-3]
                 word_list.append(word)
-        self._embeddings_df = pd.DataFrame(data=embedding,index = word_list)
-        logging.info("We ingested %d labeled word vectors from %s and %s" % (len(self._embeddings_df), embeddings, words))
+        self._embeddings_df = pd.DataFrame(data=embedding, index=word_list)
+        logging.info(
+            "We ingested %d labeled word vectors from %s and %s" % (len(self._embeddings_df), embeddings, words))
         self._ncbigene2symbol_map = kcetParser.get_id_to_symbol_map()
         logging.info("We ingested %d symbol/NCBI gene id mappings" % (len(self._ncbigene2symbol_map)))
         self._meshid2disease_map = kcetParser.get_mesh_to_disease_map()
@@ -93,16 +101,11 @@ class KcetDatasetGenerator:
     def get_words(self):
         return self._embeddings_df.index
 
-    def get_embeddings(self) -> pd.DataFrame :
+    def get_embeddings(self) -> pd.DataFrame:
         """
         return a Pandas dataframe whose index is the words, and whose columns are the dimensions of the embeddings
         """
         return self._embeddings_df
-
-    def get_current_year(self):
-        now = datetime.datetime.now()  # default to current year
-        year = now.year
-        return year
 
     def get_training_and_test_data(self, target_year: int, begin_year: int, end_year: int, factor: int = 10) -> \
             Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -122,45 +125,46 @@ class KcetDatasetGenerator:
             We randomly choose factor-times as many negative training examples as there is positive training examples
         """
         positive_training_df = self._get_positive_training_data_set(year=target_year)
-        print("WOWOWO", type(positive_training_df))
         negative_training_df = self._get_negative_training_dataset(pos_training_df=positive_training_df,
                                                                    year=target_year, factor=factor)
         if end_year < begin_year:
             raise ValueError("End year cannot be before start year")
         if begin_year < target_year:
             raise ValueError("Begin year cannot be before target year")
-        
-        positive_test_df = self._get_positive_test_data(target_year=target_year, begin_year=begin_year, end_year=end_year)
+
+        positive_test_df = self._get_positive_test_data(target_year=target_year, begin_year=begin_year,
+                                                        end_year=end_year)
         negative_test_df = self._get_negative_test_data(negative_df=negative_training_df, year=target_year)
         return positive_training_df, negative_training_df, positive_test_df, negative_test_df
-        
-    
-    
-    def get_data_years_after_target_year_upto_later_year_phase_4(self, target_year: int, mid_year:int, factor: int = 10,
-                                                           num_years_later: int = 1) -> Tuple[pd.DataFrame]:
+
+    def get_data_years_after_target_year_upto_later_year_phase_4(self, target_year: int, mid_year: int,
+                                                                 factor: int = 10,
+                                                                 num_years_later: int = 1) -> Tuple[pd.DataFrame]:
         raise Exception("Not supported")
 
-
-    def get_training_and_test_data_phase_4(self, target_year: int, begin_year: int, end_year: int, factor: int = 10) -> Tuple[pd.DataFrame]:
+    def get_training_and_test_data_phase_4(self, target_year: int, begin_year: int, end_year: int, factor: int = 10) -> \
+            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         The function is analogous to get_training_and_test_data (see this for documehtation) but is limited to phase 4 clinical studies
         """
         pos_train_df = self._get_positive_training_data_set(year=target_year)
-        neg_train_df = self._get_negative_training_dataset(pos_training_df=pos_train_df, year=target_year, factor=factor)
+        neg_train_df = self._get_negative_training_dataset(pos_training_df=pos_train_df, year=target_year,
+                                                           factor=factor)
         if end_year < begin_year:
             raise ValueError("End year cannot be before start year")
         if begin_year < target_year:
             raise ValueError("Begin year cannot be before target year")
-        positive_test_df = self._get_positive_test_data_phase_4(target_year=target_year, begin_year= begin_year, end_year=end_year) 
+        positive_test_df = self._get_positive_test_data_phase_4(target_year=target_year, begin_year=begin_year,
+                                                                end_year=end_year)
         negative_test_df = self._get_negative_test_data(negative_df=neg_train_df, year=target_year)
         return pos_train_df, neg_train_df, positive_test_df, negative_test_df
-       
 
-    def get_data_for_novel_prediction(self,current_year: int, factor: int = 10):
-        if current_year != self.get_current_year():
+    def get_data_for_novel_prediction(self, current_year: int, factor: int = 10):
+        if current_year != get_current_year():
             raise Exception("For novel prediction, year must be the current year! ")
         positive_training_df = self._get_positive_training_data_set(year=current_year)
-        negative_training_df = self._get_negative_training_dataset(pos_training_df=positive_training_df, year=current_year, factor=factor)
+        negative_training_df = self._get_negative_training_dataset(pos_training_df=positive_training_df,
+                                                                   year=current_year, factor=factor)
         prediction_df = self.get_prediction_dataset()
         return positive_training_df, negative_training_df, prediction_df
 
@@ -172,11 +176,11 @@ class KcetDatasetGenerator:
             raise ValueError("year must be an integer")
         return self._df_phase4[self._df_phase4['year'] <= year]
 
-
-    def _get_positive_validation_data_set_years_after_target_year(self, old_target_year: int, mid_year:int, new_target_year: int) -> pd.DataFrame:
+    def _get_positive_validation_data_set_years_after_target_year(self, old_target_year: int, mid_year: int,
+                                                                  new_target_year: int) -> pd.DataFrame:
         raise Exception("UNSUPPORTED")
 
-    def _get_positive_test_data(self, target_year: int, begin_year:int, end_year: int) -> pd.DataFrame:
+    def _get_positive_test_data(self, target_year: int, begin_year: int, end_year: int) -> pd.DataFrame:
         """
         WAS _get_positive_validation_data_set_years_after_target_year
         Get all of the positive examples from one year after the old_target_year until the new_target_year.
@@ -184,11 +188,16 @@ class KcetDatasetGenerator:
         2011 until 2015.
         -- used for validation in historical validation experiments
         """
-        data_from_mid_year_until_new_target_year=(self._df_allphases['year'] >= begin_year) & (self._df_allphases['year'] <= end_year)
-        df_pos_valid = self._df_allphases[data_from_mid_year_until_new_target_year]
+        within_valid_year_range = (self._df_allphases['year'] >= begin_year) & (self._df_allphases['year'] <= end_year)
+        print("begin", begin_year, "end", end_year)
+        print(self._df_allphases.head(50))
+        df_pos_valid = self._df_allphases[within_valid_year_range]
         positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_valid)
+        print("df pos valid)")
+        print(df_pos_valid.head(50))
         # Ground-truth training data is up to the target year only!
-        all_phases_positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= target_year])
+        all_phases_positive_links = Link.fromDataFrameToLinkSet(
+            self._df_allphases[self._df_allphases['year'] <= target_year])
 
         kinase_list = []
         cancer_list = []
@@ -201,11 +210,12 @@ class KcetDatasetGenerator:
                 cancer = link.cancer
                 kinase_list.append(kinase)
                 cancer_list.append(cancer)
-        logging.info("Skipped %d links that were found in the positive all phases set (expected behavior)" % n_skipped_link)
-        df_pos_validation = pd.DataFrame(list(zip(cancer_list,kinase_list)), columns=['mesh_id', 'gene_id'])
+        logging.info(
+            "Skipped %d links that were found in the positive all phases set (expected behavior)" % n_skipped_link)
+        df_pos_validation = pd.DataFrame(list(zip(cancer_list, kinase_list)), columns=['mesh_id', 'gene_id'])
         return df_pos_validation
 
-    def _get_positive_test_data_phase_4(self, target_year:int, begin_year:int, end_year:int) -> pd.DataFrame:
+    def _get_positive_test_data_phase_4(self, target_year: int, begin_year: int, end_year: int) -> pd.DataFrame:
         """
         Get all of the positive links (of phase 4)  after the target year-- used for validation
         in historical validation experiments
@@ -213,23 +223,25 @@ class KcetDatasetGenerator:
         phase_4_after_target_year = (self._df_phase4['year'] >= begin_year) & (self._df_phase4['year'] <= end_year)
         df_pos_test = self._df_phase4[phase_4_after_target_year]
         positive_test_links = Link.fromDataFrameToLinkSet(df_pos_test)
-        all_phases_positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= target_year])
+        all_phases_positive_links = Link.fromDataFrameToLinkSet(
+            self._df_allphases[self._df_allphases['year'] <= target_year])
 
         kinase_list = []
         cancer_list = []
         n_skipped_link = 0
         for link in positive_test_links:
-                if link in all_phases_positive_links:
-                    n_skipped_link += 1
-                else:
-                    kinase = link.kinase
-                    cancer = link.cancer
-                    kinase_list.append(kinase)
-                    cancer_list.append(cancer)
-        logging.info("Skipped %d links that were found in the positive all phases set (expected behavior)" % n_skipped_link)
+            if link in all_phases_positive_links:
+                n_skipped_link += 1
+            else:
+                kinase = link.kinase
+                cancer = link.cancer
+                kinase_list.append(kinase)
+                cancer_list.append(cancer)
+        logging.info(
+            "Skipped %d links that were found in the positive all phases set (expected behavior)" % n_skipped_link)
         return pd.DataFrame(list(zip(cancer_list, kinase_list)), columns=['mesh_id', 'gene_id'])
 
-    def _get_negative_test_data(self,  negative_df: pd.DataFrame, year: int) -> pd.DataFrame:
+    def _get_negative_test_data(self, negative_df: pd.DataFrame, year: int) -> pd.DataFrame:
         """
         Get negative examples after the target year-- used for validation
         in historical validation experiments. Note that we take examples that are negative
@@ -269,8 +281,7 @@ class KcetDatasetGenerator:
         negative_dict_list = [l.to_dict() for l in negative_links]
         return pd.DataFrame(negative_dict_list)
 
-
-    def _get_unique_positive_training_count(self, pos_training_df:pd.DataFrame) -> int:
+    def _get_unique_positive_training_count(self, pos_training_df: pd.DataFrame) -> int:
         """
         The pandas dataframe with positive training examples can have duplicates if we are 
         training for phases 1,2,3,4 (all phases are combined into cancer-protein kinase pairs in further processing).
@@ -289,7 +300,8 @@ class KcetDatasetGenerator:
         print("1 {} 2 {}".format(pos_training_df.shape[0], len(unique_pairs)))
         return len(unique_pairs)
 
-    def _get_negative_training_dataset(self, pos_training_df:pd.DataFrame, year: int, factor: int = 10) -> pd.DataFrame:
+    def _get_negative_training_dataset(self, pos_training_df: pd.DataFrame, year: int,
+                                       factor: int = 10) -> pd.DataFrame:
         """
         Get a negative training set.
         We take Random non-links that were not listed in any of phase 1,2,3,4 in the year up 
@@ -300,8 +312,9 @@ class KcetDatasetGenerator:
         kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
         positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= year])
-        #positive_training_links = Link.fromDataFrameToLinkSet(pos_training_df)
-        n_pos_examples = self._get_unique_positive_training_count(pos_training_df) # number of links in positive training set
+        # positive_training_links = Link.fromDataFrameToLinkSet(pos_training_df)
+        n_pos_examples = self._get_unique_positive_training_count(
+            pos_training_df)  # number of links in positive training set
         n_neg_examples = n_pos_examples * factor
         negative_links = set()
         n_skipped_link = 0
@@ -313,11 +326,12 @@ class KcetDatasetGenerator:
             randomLink = Link(kinase=random_kinase, cancer=random_cancer)
             # Do not add a link from the positive set to the negative set 
             # Note that this can happen by chance and is not worrisome, but we log it
-            if randomLink in positive_links or randomLink in negative_links: 
+            if randomLink in positive_links or randomLink in negative_links:
                 n_skipped_link += 1
                 continue
             negative_links.add(randomLink)
-        logging.info("Skipped %d random links that were found in previously defined sets (expected behavior)" % n_skipped_link)
+        logging.info(
+            "Skipped %d random links that were found in previously defined sets (expected behavior)" % n_skipped_link)
         logging.info("[INFO] We generated a negative training set with %d examples (the positive set has %d)" % (
             len(negative_links), len(positive_links)))
         # format as a pandas dataframe
@@ -341,7 +355,6 @@ class KcetDatasetGenerator:
                 prediction_list.append(L.to_dict())
         return pd.DataFrame(prediction_list)
 
-
     def get_disease_kinase_difference_vectors(self, examples: pd.DataFrame) -> pd.DataFrame:
         """
         The input is a dataframe with protein kinases (NCBI gene ids) and cancers (MeSH id)
@@ -358,12 +371,12 @@ class KcetDatasetGenerator:
             raise ValueError("Input dataframe must contain a column called mesh_id")
         # if len(examples.columns) != 2:
         #    raise ValueError("Input dataframe must have exactly two columns")
-        df = pd.DataFrame(columns = self._embeddings_df.columns)
+        df = pd.DataFrame(columns=self._embeddings_df.columns)
         total = len(examples.index)
-        if total==0:
+        if total == 0:
             raise ValueError("Attempt to get difference vectors from empty data frame")
         i = 0
-        for _, row in examples.iterrows(): 
+        for _, row in examples.iterrows():
             ncbigene_id = row["gene_id"]
             mesh_id = row["mesh_id"]
             ncbigene_id_embedding = None
@@ -376,15 +389,15 @@ class KcetDatasetGenerator:
                 mesh_id_embedding = self._embeddings_df.loc[mesh_id]
             else:
                 unidentified_cancers.add(mesh_id)
-            if ncbigene_id_embedding is not None and mesh_id_embedding is not None:     
+            if ncbigene_id_embedding is not None and mesh_id_embedding is not None:
                 diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
-                #diff_kinase_mesh_list_pos_train.append(diff_kinase_mesh)
-                #diff_index_pos_train.append(ncbigene_id + "," + mesh_id)
+                # diff_kinase_mesh_list_pos_train.append(diff_kinase_mesh)
+                # diff_index_pos_train.append(ncbigene_id + "," + mesh_id)
                 label = "%s-%s" % (ncbigene_id, mesh_id)
                 df.loc[label] = diff_kinase_mesh
             i += 1
             if i % 10000 == 0 and i > 0:
-                logging.info("Created %d/%d (%.1f%%) difference vectors" % (i, total, 100.0*i/total))
+                logging.info("Created %d/%d (%.1f%%) difference vectors" % (i, total, 100.0 * i / total))
         logging.info("Extracted %s kinase-cancer difference vectors" % len(df))
         logging.info("Initial data: %d examples" % len(examples))
         logging.info("Could not identify %d gene ids" % len(unidentified_genes))

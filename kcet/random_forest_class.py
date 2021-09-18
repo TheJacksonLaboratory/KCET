@@ -19,15 +19,12 @@ class KcetRandomForest:
                 embedddingfile: str,
                 wordsfile: str,
                 target: int) -> None:
-
         self._data_generator = data_gen
         self._target_year = target
         if not os.path.isfile(embedddingfile):
             raise FileNotFoundError("Could not find embedding file at " + embedddingfile)
         if not os.path.isfile(wordsfile):
-            raise FileNotFoundError("Could not find embedding/words file at " + wordsfile)
-        #self._predictor = KinasePredictor(embeddings=embedddingfile, words=wordsfile)
-    
+            raise FileNotFoundError("Could not find embedding/words file at " + wordsfile)    
 
     def classify(self, num_years_later: int, mid_year: int):
         """

@@ -182,13 +182,12 @@ class CTParserByPhase:
         self._pki_dict = pki_dict
         self._validation_pki_dict = validation_pki_dict
 
-    def _get_data_frame(self, dict_list: List):
+    def _get_data_frame(self, dict_list: List, removeRedundantEntries: bool = False):
         """
         Return a pandas dataframe with data for all trials and all phases
         Constructs the dataframe from a list of dictionaries
         """
         extended_dict_list = []  ## The dictionaries where we map the PKIs to kinases/genes ids
-        validation_dict_list = []  ## For studies after the target date.
         for dct in dict_list:
             medication = dct['pki']
             #print(medication)
@@ -208,29 +207,41 @@ class CTParserByPhase:
                 extended_d['kinase'] = kinase
                 extended_d['gene_id'] = geneid
                 extended_dict_list.append(extended_d)
-        df = pd.DataFrame.from_records([d for d in extended_dict_list])
+        if removeRedundantEntries:
+            unique_list = []
+            seen_entries = set()
+            for entry in extended_dict_list:
+                # form a key that is unique for the gene/kinase combination
+                key = entry['mesh_id'] + entry['gene_id']
+                if not key in seen_entries:
+                    seen_entries.add(key)
+                    unique_list.append(entry)
+            df = pd.DataFrame.from_records([d for d in unique_list])
+        else:
+            df = pd.DataFrame.from_records([d for d in extended_dict_list])
         # reorder the columns
         newcols = ['cancer', 'mesh_id', 'kinase', 'gene_id', 'pki', 'nct', 'phase', 'year']
         return df[newcols]
 
-    def get_all_phases(self):
+    def get_all_phases(self, removeRedundantEntries: bool = False):
         """
         Return a pandas dataframe with data for all trials and all phases
         """
         dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
         for _, v in self._pki_dict.items():
             dict_list.extend(v.get_data_frame_all_phases())
-        return self._get_data_frame(dict_list=dict_list)
+        df = self._get_data_frame(dict_list=dict_list, removeRedundantEntries=removeRedundantEntries)
+        return df
 
 
-    def get_phase_4(self):
+    def get_phase_4(self, removeRedundantEntries: bool = False):
         """
         Return a pandas dataframe with data for all trials in phase 4
         """
         dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
         for _, v in self._pki_dict.items():
             dict_list.extend(v.get_data_frame_phase_4())
-        return self._get_data_frame(dict_list=dict_list)
+        return self._get_data_frame(dict_list=dict_list, removeRedundantEntries=removeRedundantEntries)
 
     def get_year(self):
         return self._year
