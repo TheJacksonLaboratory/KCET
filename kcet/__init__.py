@@ -1,5 +1,4 @@
 from .ct_by_phase_parser import CTParserByPhase
-from .kinase_predictor import KinasePredictor
 from .kcet_parser import KcetParser
 from .kcet_dataset_generator import KcetDatasetGenerator
 from .random_forest_class import KcetRandomForest

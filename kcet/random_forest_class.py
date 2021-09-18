@@ -1,5 +1,4 @@
 from .kcet_dataset_generator import KcetDatasetGenerator
-from .kinase_predictor import KinasePredictor
 
 import pandas as pd
 import numpy as np
@@ -27,7 +26,7 @@ class KcetRandomForest:
             raise FileNotFoundError("Could not find embedding file at " + embedddingfile)
         if not os.path.isfile(wordsfile):
             raise FileNotFoundError("Could not find embedding/words file at " + wordsfile)
-        self._predictor = KinasePredictor(embeddings=embedddingfile, words=wordsfile)
+        #self._predictor = KinasePredictor(embeddings=embedddingfile, words=wordsfile)
     
 
     def classify(self, num_years_later: int, mid_year: int):
@@ -45,10 +44,10 @@ class KcetRandomForest:
         pos_train_df, neg_train_df, pos_validation_df, neg_validation_df = \
             self._data_generator.get_data_years_after_target_year_upto_later_year(target_year=self._target_year, mid_year = mid_year, num_years_later= num_years_later)
         # Now we need to extract the corresponding embedded vectors
-        pos_train_vectors = self._predictor.get_disease_kinase_difference_vectors(pos_train_df)
-        neg_train_vectors = self._predictor.get_disease_kinase_difference_vectors(neg_train_df)
-        pos_validation_vectors = self._predictor.get_disease_kinase_difference_vectors(pos_validation_df)
-        neg_validation_vectors = self._predictor.get_disease_kinase_difference_vectors(neg_validation_df)
+        pos_train_vectors = self._data_generator.get_disease_kinase_difference_vectors(pos_train_df)
+        neg_train_vectors = self._data_generator.get_disease_kinase_difference_vectors(neg_train_df)
+        pos_validation_vectors = self._data_generator.get_disease_kinase_difference_vectors(pos_validation_df)
+        neg_validation_vectors = self._data_generator.get_disease_kinase_difference_vectors(neg_validation_df)
         # Prepare for random forest training
         n_pos_train = pos_train_vectors.shape[0]
         n_neg_train = neg_train_vectors.shape[0]

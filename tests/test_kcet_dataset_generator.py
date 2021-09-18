@@ -69,7 +69,7 @@ class TestKCETDatasetGenerator(TestCase):
         Multiple Myeloma  D009101 ERBB2 ncbigene2064
         Multiple Myeloma  D009101 ERBB4 ncbigene2066
         """
-        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year(2013,2014, 2018)
+        df_pos_validation = self.kcet_data_generator_1._get_positive_test_data(2013,2014, 2018)
         #print(df_pos_validation)
         self.assertEqual(3, df_pos_validation.shape[0])
 
@@ -97,7 +97,7 @@ class TestKCETDatasetGenerator(TestCase):
         Multiple Myeloma  D009101 ERBB2 ncbigene2064
         Multiple Myeloma  D009101 ERBB4 ncbigene2066
         """
-        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year(2013, 2015, 2018)
+        df_pos_validation = self.kcet_data_generator_1._get_positive_test_data(2013, 2015, 2018)
         # print(df_pos_validation)
         self.assertEqual(3, df_pos_validation.shape[0])
 
@@ -125,7 +125,7 @@ class TestKCETDatasetGenerator(TestCase):
         Multiple Myeloma  D009101 ERBB2 ncbigene2064
         Multiple Myeloma  D009101 ERBB4 ncbigene2066
         """
-        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year(2013, 2015, 2017)
+        df_pos_validation = self.kcet_data_generator_1._get_positive_test_data(2013, 2015, 2017)
         # print(df_pos_validation)
         self.assertEqual(3, df_pos_validation.shape[0])
 
@@ -166,7 +166,7 @@ class TestKCETDatasetGenerator(TestCase):
         Multiple Myeloma  D009101 ERBB2 ncbigene2064
         Multiple Myeloma  D009101 ERBB4 ncbigene2066
         """
-        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year(2012,2013, 2015)
+        df_pos_validation = self.kcet_data_generator_1._get_positive_test_data(2012,2013, 2015)
         #print(df_pos_validation)
         self.assertEqual(12, df_pos_validation.shape[0])
 
@@ -192,7 +192,7 @@ class TestKCETDatasetGenerator(TestCase):
         Multiple Myeloma  D009101 ERBB2 ncbigene2064
         Multiple Myeloma  D009101 ERBB4 ncbigene2066
         """
-        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year(2012,2014, 2015)
+        df_pos_validation = self.kcet_data_generator_1._get_positive_test_data(2012,2014, 2015)
         # print(df_pos_validation)
         self.assertEqual(3, df_pos_validation.shape[0])
 
@@ -211,7 +211,7 @@ class TestKCETDatasetGenerator(TestCase):
         So, there is no  kinase-cancer link
 
         """
-        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year_phase_4(2012, 2013,2015)
+        df_pos_validation = self.kcet_data_generator_1._get_positive_test_data_phase_4(2012, 2013,2015)
         #print(df_pos_validation)
         self.assertEqual(0, df_pos_validation.shape[0])
 
@@ -229,7 +229,7 @@ class TestKCETDatasetGenerator(TestCase):
         So, there is no  kinase-cancer link
 
         """
-        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year_phase_4(2012,2014, 2015)
+        df_pos_validation = self.kcet_data_generator_1._get_positive_test_data_phase_4(2012,2014, 2015)
         #print(df_pos_validation)
         self.assertEqual(0, df_pos_validation.shape[0])
 
@@ -244,8 +244,7 @@ class TestKCETDatasetGenerator(TestCase):
         was studied in phase 1,2,3 clinical trials studies.
 
         """
-        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year_phase_4(
-            2012, 2014, 2020)
+        df_pos_validation = self.kcet_data_generator_1._get_positive_test_data_phase_4(2012, 2014, 2020)
         self.assertEqual(0, df_pos_validation.shape[0])
 
     def test_get_positive_validation_data_set_1_phase4_later_year_2013_2018(self):
@@ -260,7 +259,7 @@ class TestKCETDatasetGenerator(TestCase):
         So, there is no  kinase-cancer link
 
         """
-        df_pos_validation = self.kcet_data_generator_1._get_positive_validation_data_set_years_after_target_year_phase_4(2013, 2014, 2018)
+        df_pos_validation = self.kcet_data_generator_1._get_positive_test_data_phase_4(2013, 2014, 2018)
         # print(df_pos_validation)
         self.assertEqual(0, df_pos_validation.shape[0])
 
@@ -301,7 +300,7 @@ class TestKCETDatasetGenerator(TestCase):
         """
         df_pos_training = self.kcet_data_generator_1._get_positive_training_data_set(2014)
         df_neg_training = self.kcet_data_generator_1._get_negative_training_dataset(df_pos_training,2014)
-        df_neg_validation = self.kcet_data_generator_1._get_negative_validation_data_set(df_neg_training,2014)
+        df_neg_validation = self.kcet_data_generator_1._get_negative_test_data(df_neg_training,2014)
         #print(df_neg_validation)
         self.assertEqual(30, df_neg_validation.shape[0])
 
@@ -388,7 +387,7 @@ class TestKCETDatasetGenerator(TestCase):
         Breast Neoplasms	D001943 CDK4    ncbigene1019
         Breast Neoplasms	D001943 CDK6    ncbigene1021
         """
-        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year(2013,2014, 2018)
+        df_pos_validation = self.kcet_data_generator_2._get_positive_test_data(2013,2014, 2018)
         #print(df_pos_validation)
         self.assertEqual(5, df_pos_validation.shape[0])
 
@@ -414,7 +413,7 @@ class TestKCETDatasetGenerator(TestCase):
         Multiple Myeloma  D009101 ERBB4 ncbigene2066
 
         """
-        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year(2013, 2015, 2018)
+        df_pos_validation = self.kcet_data_generator_2._get_positive_test_data(2013, 2015, 2018)
         #print(df_pos_validation)
         self.assertEqual(3, df_pos_validation.shape[0])
 
@@ -457,7 +456,7 @@ class TestKCETDatasetGenerator(TestCase):
         Breast Neoplasms	D001943 CDK4    ncbigene1019
         Breast Neoplasms	D001943 CDK6    ncbigene1021
         """
-        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year(2013, 2014,2020)
+        df_pos_validation = self.kcet_data_generator_2._get_positive_test_data(2013, 2014,2020)
         #print(df_pos_validation)
         self.assertEqual(5, df_pos_validation.shape[0])
 
@@ -490,7 +489,7 @@ class TestKCETDatasetGenerator(TestCase):
         Breast Neoplasms	D001943 CDK4    ncbigene1019
         Breast Neoplasms	D001943 CDK6    ncbigene1021
         """
-        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year(2013, 2015,2020)
+        df_pos_validation = self.kcet_data_generator_2._get_positive_test_data(2013, 2015,2020)
         print(df_pos_validation)
         self.assertEqual(5, df_pos_validation.shape[0])
 
@@ -508,7 +507,7 @@ class TestKCETDatasetGenerator(TestCase):
         So, there is no  kinase-cancer link
 
         """
-        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year_phase_4(2013,2014, 2018)
+        df_pos_validation = self.kcet_data_generator_2._get_positive_test_data_phase_4(2013,2014, 2018)
         print(df_pos_validation.head())
         self.assertEqual(0, df_pos_validation.shape[0])
 
@@ -536,7 +535,7 @@ class TestKCETDatasetGenerator(TestCase):
         Breast Neoplasms	D001943 CDK4    ncbigene1019
         Breast Neoplasms	D001943 CDK6    ncbigene1021
         """
-        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year_phase_4(2013,2014, 2020)
+        df_pos_validation = self.kcet_data_generator_2._get_positive_test_data_phase_4(2013,2014, 2020)
         print(df_pos_validation)
         self.assertEqual(2, df_pos_validation.shape[0])
 
@@ -558,7 +557,7 @@ class TestKCETDatasetGenerator(TestCase):
         Breast Neoplasms	D001943 CDK4    ncbigene1019
         Breast Neoplasms	D001943 CDK6    ncbigene1021
         """
-        df_pos_validation = self.kcet_data_generator_2._get_positive_validation_data_set_years_after_target_year_phase_4(2013,2016, 2020)
+        df_pos_validation = self.kcet_data_generator_2._get_positive_test_data_phase_4(2013,2016, 2020)
         print(df_pos_validation)
         self.assertEqual(2, df_pos_validation.shape[0])
 

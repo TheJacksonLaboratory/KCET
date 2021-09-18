@@ -13,7 +13,7 @@ from .ct_by_phase_parser import CTParserByPhase
 
 class Link:
     """
-    Simple class to keep track of positive and negative links using a Hash
+    Simple class that is intended for use to keep track of positive and negative links using a Hash
     """
 
     def __init__(self, kinase: str, cancer: str) -> None:
@@ -37,6 +37,9 @@ class Link:
     def to_dict(self):
         return {'mesh_id': self._cancer, 'gene_id': self._kinase}
 
+    def __str__(self):
+        return self._cancer + "-" + self._kinase
+
     @staticmethod
     def fromDataFrameToLinkSet(df: pd.DataFrame) -> List:
         linkset = set()
@@ -51,8 +54,15 @@ class Link:
 class KcetDatasetGenerator:
     """
     Class to generate test, training, and prediction files.
+    Use of terminology
+    – Training set: A set of examples used for learning.
+    – Validation set: A set of examples used to tune the parameters of a classifier.
+    – Test set: A set of examples used only to assess the performance of a fully-specified classifier.
+    In our case, we use historical data for training/validation by extracting word/concept embedddings up to the target year (e.g., 2010)
+    and use subsequent years for testing (e.g., data from after 2010).
+    For some experiments, we restrict our analysis to phase 4 clinical trials. For others, we take all phases.
+    Functions such as get_training_and_test_data refer to all phases; get_training_and_test_data_phase4 is restricted to phase 4.
     """
-
     def __init__(self, clinical_trials: str, embeddings: str, words: str) -> None:
         kcetParser = KcetParser()
         self._pki_to_kinase_dict = kcetParser.get_pki_to_kinase_list_dict()
@@ -61,7 +71,8 @@ class KcetDatasetGenerator:
         parser = CTParserByPhase(clinical_trials=clinical_trials)
         self._df_allphases = parser.get_all_phases()  # all positive data, phase 1,2,3,4
         self._df_phase4 = parser.get_phase_4()  # all positive data, phase 4 only
-        ## add the embeddings
+        print("SSSS", type(self._df_allphases))
+        # add the embeddings
         if not os.path.exists(embeddings):
             raise FileNotFoundError("Could not find embedding file at %s" % embeddings)
         if not os.path.exists(words):
@@ -88,55 +99,62 @@ class KcetDatasetGenerator:
         """
         return self._embeddings_df
 
-
     def get_current_year(self):
         now = datetime.datetime.now()  # default to current year
         year = now.year
         return year
 
-
-    def get_data_years_after_target_year_upto_later_year(self, target_year: int, mid_year: int, factor: int = 10,
-                                                   num_years_later: int = 1) -> \
+    def get_training_and_test_data(self, target_year: int, begin_year: int, end_year: int, factor: int = 10) -> \
             Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Get positive and negative training for the target year and positive and negative validation 
-        for num_years_later years later than the target year.
+        WAS get_data_years_after_target_year_upto_later_year
+        Get positive and negative training data for the target year 
+        Get data for validation that goes from begin_year to end_year
+        Parameters
+        ----------
+        target_year : int
+            The year up to which embeddings were created from PubMed abstracts. Training is done with clinical trials data up to the target year
+        begin_year : int
+            The first year of the validation data
+        end_year : int
+            The last year of the validation data
+        factor : int
+            We randomly choose factor-times as many negative training examples as there is positive training examples
         """
         positive_training_df = self._get_positive_training_data_set(year=target_year)
+        print("WOWOWO", type(positive_training_df))
         negative_training_df = self._get_negative_training_dataset(pos_training_df=positive_training_df,
                                                                    year=target_year, factor=factor)
-        current_year = self.get_current_year()
-        new_target_year = mid_year + num_years_later
-        if target_year < current_year and new_target_year < current_year:  # historical prediction
-            positive_validation_df = self._get_positive_validation_data_set_years_after_target_year(old_target_year=target_year, mid_year=mid_year,
-                                                                                       new_target_year=new_target_year)
-            negative_validation_df = self._get_negative_validation_data_set(negative_df=negative_training_df,
-                                                                            year=target_year)
-            return positive_training_df, negative_training_df, positive_validation_df, negative_validation_df
-        else:
-            raise Exception("target year and the future year must be before the current year! ")
-
-
+        if end_year < begin_year:
+            raise ValueError("End year cannot be before start year")
+        if begin_year < target_year:
+            raise ValueError("Begin year cannot be before target year")
+        
+        positive_test_df = self._get_positive_test_data(target_year=target_year, begin_year=begin_year, end_year=end_year)
+        negative_test_df = self._get_negative_test_data(negative_df=negative_training_df, year=target_year)
+        return positive_training_df, negative_training_df, positive_test_df, negative_test_df
+        
+    
+    
     def get_data_years_after_target_year_upto_later_year_phase_4(self, target_year: int, mid_year:int, factor: int = 10,
                                                            num_years_later: int = 1) -> Tuple[pd.DataFrame]:
+        raise Exception("Not supported")
+
+
+    def get_training_and_test_data_phase_4(self, target_year: int, begin_year: int, end_year: int, factor: int = 10) -> Tuple[pd.DataFrame]:
         """
-        Get positive and negative data after the target year and upto a later year indicated by the argument. 
-        The positive training and positive validation are links from phase 4.
+        The function is analogous to get_training_and_test_data (see this for documehtation) but is limited to phase 4 clinical studies
         """
         pos_train_df = self._get_positive_training_data_set(year=target_year)
-        neg_train_df = self._get_negative_training_dataset(pos_training_df=pos_train_df,
-                                                                   year=target_year, factor=factor)
-        current_year = self.get_current_year()
-        new_target_year = mid_year + num_years_later
-
-        if target_year < current_year and mid_year < current_year and new_target_year < current_year:  # historical prediction
-            positive_validation_df = self._get_positive_validation_data_set_years_after_target_year_phase_4(old_target_year=target_year, mid_year = mid_year,
-                new_target_year=new_target_year)  # get phase 4 for the years after the target year
-            negative_validation_df = self._get_negative_validation_data_set(negative_df=neg_train_df,
-                                                                            year=target_year)
-            return pos_train_df, neg_train_df, positive_validation_df, negative_validation_df
-        else:
-            raise Exception("target year and the future year must be before  the current year! ")
+        neg_train_df = self._get_negative_training_dataset(pos_training_df=pos_train_df, year=target_year, factor=factor)
+        if end_year < begin_year:
+            raise ValueError("End year cannot be before start year")
+        if begin_year < target_year:
+            raise ValueError("Begin year cannot be before target year")
+        positive_test_df = self._get_positive_test_data_phase_4(target_year=target_year, begin_year= begin_year, end_year=end_year) 
+        negative_test_df = self._get_negative_test_data(negative_df=neg_train_df, year=target_year)
+        return pos_train_df, neg_train_df, positive_test_df, negative_test_df
+       
 
     def get_data_for_novel_prediction(self,current_year: int, factor: int = 10):
         if current_year != self.get_current_year():
@@ -152,23 +170,25 @@ class KcetDatasetGenerator:
         """
         if not isinstance(year, int):
             raise ValueError("year must be an integer")
-
-        not_later_than_target_year = self._df_phase4['year'] <= year
-        return self._df_phase4[not_later_than_target_year]
+        return self._df_phase4[self._df_phase4['year'] <= year]
 
 
     def _get_positive_validation_data_set_years_after_target_year(self, old_target_year: int, mid_year:int, new_target_year: int) -> pd.DataFrame:
+        raise Exception("UNSUPPORTED")
+
+    def _get_positive_test_data(self, target_year: int, begin_year:int, end_year: int) -> pd.DataFrame:
         """
+        WAS _get_positive_validation_data_set_years_after_target_year
         Get all of the positive examples from one year after the old_target_year until the new_target_year.
         For example, if the old_target_year is 2010 and new_target_year is 2015, then the positive validation set is all positive links from
         2011 until 2015.
         -- used for validation in historical validation experiments
         """
-        data_from_mid_year_until_new_target_year=(self._df_allphases['year'] >= mid_year) & (self._df_allphases['year'] <= new_target_year)
+        data_from_mid_year_until_new_target_year=(self._df_allphases['year'] >= begin_year) & (self._df_allphases['year'] <= end_year)
         df_pos_valid = self._df_allphases[data_from_mid_year_until_new_target_year]
         positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_valid)
-
-        all_phases_positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= old_target_year])
+        # Ground-truth training data is up to the target year only!
+        all_phases_positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= target_year])
 
         kinase_list = []
         cancer_list = []
@@ -185,22 +205,20 @@ class KcetDatasetGenerator:
         df_pos_validation = pd.DataFrame(list(zip(cancer_list,kinase_list)), columns=['mesh_id', 'gene_id'])
         return df_pos_validation
 
-    def _get_positive_validation_data_set_years_after_target_year_phase_4(self, old_target_year:int, mid_year:int, new_target_year:int) -> pd.DataFrame:
+    def _get_positive_test_data_phase_4(self, target_year:int, begin_year:int, end_year:int) -> pd.DataFrame:
         """
         Get all of the positive links (of phase 4)  after the target year-- used for validation
         in historical validation experiments
         """
-        phase_4_later_than_target_year = (self._df_phase4['year'] >= mid_year) & (self._df_phase4['year'] <= new_target_year)
-
-        df_pos_valid = self._df_phase4[phase_4_later_than_target_year]
-        positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_valid)
-
-        all_phases_positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= old_target_year])
+        phase_4_after_target_year = (self._df_phase4['year'] >= begin_year) & (self._df_phase4['year'] <= end_year)
+        df_pos_test = self._df_phase4[phase_4_after_target_year]
+        positive_test_links = Link.fromDataFrameToLinkSet(df_pos_test)
+        all_phases_positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= target_year])
 
         kinase_list = []
         cancer_list = []
         n_skipped_link = 0
-        for link in positive_validation_links:
+        for link in positive_test_links:
                 if link in all_phases_positive_links:
                     n_skipped_link += 1
                 else:
@@ -209,10 +227,9 @@ class KcetDatasetGenerator:
                     kinase_list.append(kinase)
                     cancer_list.append(cancer)
         logging.info("Skipped %d links that were found in the positive all phases set (expected behavior)" % n_skipped_link)
-        df_pos_validation = pd.DataFrame(list(zip(cancer_list, kinase_list)), columns=['mesh_id', 'gene_id'])
-        return df_pos_validation
+        return pd.DataFrame(list(zip(cancer_list, kinase_list)), columns=['mesh_id', 'gene_id'])
 
-    def _get_negative_validation_data_set(self,  negative_df: pd.DataFrame, year: int) -> pd.DataFrame:
+    def _get_negative_test_data(self,  negative_df: pd.DataFrame, year: int) -> pd.DataFrame:
         """
         Get negative examples after the target year-- used for validation
         in historical validation experiments. Note that we take examples that are negative
@@ -252,19 +269,39 @@ class KcetDatasetGenerator:
         negative_dict_list = [l.to_dict() for l in negative_links]
         return pd.DataFrame(negative_dict_list)
 
+
+    def _get_unique_positive_training_count(self, pos_training_df:pd.DataFrame) -> int:
+        """
+        The pandas dataframe with positive training examples can have duplicates if we are 
+        training for phases 1,2,3,4 (all phases are combined into cancer-protein kinase pairs in further processing).
+        In order to get the right number of negative training examples, we need to find the number
+        of unique positive examples, which is the purpose of this function.
+        We do this simply by making a key out of the mesh and gene ids and keeping track of this.
+        """
+        if not isinstance(pos_training_df, pd.DataFrame):
+            print(type(pos_training_df))
+            raise ValueError("pos training df must be a pandas dataframe")
+        unique_pairs = set()
+        for i, row in pos_training_df.iterrows():
+            key = row['mesh_id'] + '-' + row['gene_id']
+            print(key)
+            unique_pairs.add(key)
+        print("1 {} 2 {}".format(pos_training_df.shape[0], len(unique_pairs)))
+        return len(unique_pairs)
+
     def _get_negative_training_dataset(self, pos_training_df:pd.DataFrame, year: int, factor: int = 10) -> pd.DataFrame:
         """
         Get a negative training set.
         We take Random non-links that were not listed in any of phase 1,2,3,4 in the year up 
         to and including self._year
-        We return factor times as many negative examples as we have positive examples. Positive exsmples are links from phase 4 only!
+        We return factor times as many negative examples as we have positive examples. Positive examples are links from phase 4 only!
         """
 
         kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
         positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= year])
-        positive_training_links = Link.fromDataFrameToLinkSet(pos_training_df)
-        n_pos_examples = len(positive_training_links) # number of links in positive training set
+        #positive_training_links = Link.fromDataFrameToLinkSet(pos_training_df)
+        n_pos_examples = self._get_unique_positive_training_count(pos_training_df) # number of links in positive training set
         n_neg_examples = n_pos_examples * factor
         negative_links = set()
         n_skipped_link = 0
@@ -276,10 +313,7 @@ class KcetDatasetGenerator:
             randomLink = Link(kinase=random_kinase, cancer=random_cancer)
             # Do not add a link from the positive set to the negative set 
             # Note that this can happen by chance and is not worrisome, but we log it
-            if randomLink in positive_links: 
-                n_skipped_link += 1
-                continue
-            if randomLink in negative_links:
+            if randomLink in positive_links or randomLink in negative_links: 
                 n_skipped_link += 1
                 continue
             negative_links.add(randomLink)

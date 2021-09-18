@@ -222,6 +222,7 @@ class CTParserByPhase:
             dict_list.extend(v.get_data_frame_all_phases())
         return self._get_data_frame(dict_list=dict_list)
 
+
     def get_phase_4(self):
         """
         Return a pandas dataframe with data for all trials in phase 4
