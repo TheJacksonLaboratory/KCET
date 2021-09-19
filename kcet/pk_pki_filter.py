@@ -3,7 +3,6 @@ import csv
 from collections import defaultdict
 import pandas as pd
 import logging
-import sys
 
 logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
@@ -101,7 +100,7 @@ class PkPkiFilter:
         parent_dir = os.path.dirname(os.path.normpath(current_dir))
         drug_central_pk_pki_file = os.path.join(parent_dir, 'input', "DrugCentralPKIPK.csv")
         self._pk_pki_list = []
-        logger.info("Reading PK/PKI data from %s", drug_central_pk_pki_file)
+        logging.info("Reading PK/PKI data from %s", drug_central_pk_pki_file)
         with open(drug_central_pk_pki_file) as f:
             rdr = csv.DictReader(f, delimiter='\t')
             for row in rdr:
@@ -119,7 +118,7 @@ class PkPkiFilter:
                         raise ValueError("Unrecognized ACT_TYPE: %s" % act_type)
                 pk_pki = PkPki(pki=pki, pk=pk, act_val=act_value, pmid=pmid)
                 self._pk_pki_list.append(pk_pki)
-        logger.info("Ingested %d pk pki links with Kd data", len(self._pk_pki_list))
+        logging.info("Ingested %d pk pki links with Kd data", len(self._pk_pki_list))
 
     def _get_max_affinity_links(self, pk_pki, n_pki_limit: int):
         if not isinstance(pk_pki, list):
@@ -146,9 +145,9 @@ class PkPkiFilter:
                 valid_pki_dict[pk_pki.pki].append(pk_pki)
         valid_pk_pki = []
         for k, v in valid_pki_dict.items():
-            logger.info("Processing %s", k)
+            logging.info("Processing %s", k)
             if len(v) > n_pki_limit:
-                logger.warning("Adjusting threshold for PKI {} because it inhibits too many PKs ({})".format(k, len(v)))
+                logging.warning("Adjusting threshold for PKI {} because it inhibits too many PKs ({})".format(k, len(v)))
                 v = self._get_max_affinity_links(pk_pki=v, n_pki_limit=n_pki_limit)
             for pk_pki in v:
                 if pk_pki.act_value is None:
@@ -157,16 +156,16 @@ class PkPkiFilter:
                     actval = str(pk_pki.act_value)
                 d = {'PKI': pk_pki.pki, 'PK': pk_pki.pk, 'ACT_VALUE': actval, 'PMID': pk_pki.pmid}
                 valid_pk_pki.append(d)
-            logger.info("PKI: %s, number of inhibited PKs %d", k, len(v))
-        logger.info("Extracted %d PKI<->PK interactions", len(valid_pk_pki))
+            logging.info("PKI: %s, number of inhibited PKs %d", k, len(v))
+        logging.info("Extracted %d PKI<->PK interactions", len(valid_pk_pki))
         return pd.DataFrame(valid_pk_pki)
 
     def output_to_file(self, outfilename:str,  n_pki_limit: int = 5, threshold: float = 0.03):
         valid_pk_pki = self.get_valid_pk_pki(n_pki_limit=n_pki_limit, threshold=threshold)
         valid_pk_pki.to_csv(outfilename, sep='\t', index=False)
         n_rows = valid_pk_pki.shape[0]
-        logger.info("We wrote {} PK PKI links to file".format(n_rows))
-        logger.info("Output filename: \"{}\"".format(outfilename))
-        logger.info("We got {} unique PKIs".format(len(valid_pk_pki.PKI.unique())))
-        logger.info("We got {} unique PKs".format(len(valid_pk_pki.PK.unique())))
-        logger.info("Settings: n_pki_limit: %d; threshold: %f", n_pki_limit, threshold)
+        logging.info("We wrote {} PK PKI links to file".format(n_rows))
+        logging.info("Output filename: \"{}\"".format(outfilename))
+        logging.info("We got {} unique PKIs".format(len(valid_pk_pki.PKI.unique())))
+        logging.info("We got {} unique PKs".format(len(valid_pk_pki.PK.unique())))
+        logging.info("Settings: n_pki_limit: %d; threshold: %f", n_pki_limit, threshold)
