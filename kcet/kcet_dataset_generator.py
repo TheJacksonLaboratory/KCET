@@ -71,9 +71,10 @@ class KcetDatasetGenerator:
     Functions such as get_training_and_test_data refer to all phases; get_training_and_test_data_phase4 is restricted to phase 4.
     """
 
-    def __init__(self, clinical_trials: str, embeddings: str, words: str) -> None:
+    def __init__(self, clinical_trials: str, embeddings: str, words: str, n_pk: int = 5) -> None:
         kcetParser = KcetParser()
-        self._pki_to_kinase_dict = kcetParser.get_pki_to_kinase_list_dict()
+        #self._pki_to_kinase_dict = kcetParser.get_pki_to_kinase_list_dict()
+        self._pki_to_kinase_dict = kcetParser._get_pki_to_kinase_list_dict_max_pk(n_pk=n_pk)
         self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()
         self._mesh_list = kcetParser.get_mesh_id_list()
         parser = CTParserByPhase(clinical_trials=clinical_trials)

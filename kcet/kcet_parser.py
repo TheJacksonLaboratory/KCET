@@ -1,3 +1,4 @@
+from .pk_pki_filter import PkPkiFilter
 import os
 import pandas as pd
 import numpy as np
@@ -207,6 +208,15 @@ class KcetParser:
                 pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
                 pki_to_kinase[pki].append(pk)
         return pki_to_kinase
+
+    def _get_pki_to_kinase_list_dict_max_pk(self, n_pk: int):
+        """
+        This function retrieves links between protein-kinase inhibitors and the protein kinases
+        that are inhibited. Since may PKIs inhibit multiple PKs, the PkPkiFilter gets up to
+        n_pk protein kinases per PKI (ranked by affinity)
+        """
+        pkpki = PkPkiFilter()
+        return pkpki.get_valid_pk_pki(n_pk)
 
     def get_pki_to_kinase_list_dict(self):
         return self._pki_to_kinase

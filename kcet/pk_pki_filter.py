@@ -5,16 +5,7 @@ import pandas as pd
 import logging
 import sys
 
-
-f_handler = logging.FileHandler('kcet.log')
-f_handler.setLevel(logging.INFO)
-f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-f_handler.setFormatter(f_format)
-logger = logging.getLogger(__name__)
-stdout_handler = logging.StreamHandler(sys.stdout)
-stdout_handler.setFormatter(f_format)
-logger.addHandler(f_handler)
-logger.addHandler(stdout_handler)
+logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
 
 class PkPki:
@@ -109,7 +100,6 @@ class PkPkiFilter:
         current_dir = os.path.dirname(__file__)
         parent_dir = os.path.dirname(os.path.normpath(current_dir))
         drug_central_pk_pki_file = os.path.join(parent_dir, 'input', "DrugCentralPKIPK.csv")
-        #dklinks = os.path.join(parent_dir, 'input', "drug_kinase_links_3_2021.csv")
         self._pk_pki_list = []
         logger.info("Reading PK/PKI data from %s", drug_central_pk_pki_file)
         with open(drug_central_pk_pki_file) as f:
@@ -142,8 +132,6 @@ class PkPkiFilter:
         # If we get here, then there are more PKs than desired at the indicated threshold
         # We want to reduce the Kd threshold to get a smaller number of higher affinity PKI<->PK links
         sorted_pk_pki = sorted(pk_pki)
-        for x in sorted_pk_pki[:n_pki_limit]:
-            print(x)
         return sorted_pk_pki[:n_pki_limit]
 
     def get_valid_pk_pki(self, n_pki_limit: int = 5, threshold: float = 0.03):
