@@ -140,3 +140,4 @@ notebooks/Predicting_links_all_phases/positive_training*
 notebooks/Predicting_links_all_phases/positive_validation*
 scratch.sh
 p3/
+scripts/*.pdf
