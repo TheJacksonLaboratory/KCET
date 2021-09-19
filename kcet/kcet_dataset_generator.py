@@ -65,7 +65,7 @@ class KcetDatasetGenerator:
     – Training set: A set of examples used for learning.
     – Validation set: A set of examples used to tune the parameters of a classifier.
     – Test set: A set of examples used only to assess the performance of a fully-specified classifier.
-    In our case, we use historical data for training/validation by extracting word/concept embedddings up to the target year (e.g., 2010)
+    In our case, we use historical data for training/test by extracting word/concept embedddings up to the target year (e.g., 2010)
     and use subsequent years for testing (e.g., data from after 2010).
     For some experiments, we restrict our analysis to phase 4 clinical trials. For others, we take all phases.
     Functions such as get_training_and_test_data refer to all phases; get_training_and_test_data_phase4 is restricted to phase 4.
@@ -112,15 +112,15 @@ class KcetDatasetGenerator:
         """
         WAS get_data_years_after_target_year_upto_later_year
         Get positive and negative training data for the target year 
-        Get data for validation that goes from begin_year to end_year
+        Get data for test that goes from begin_year to end_year
         Parameters
         ----------
         target_year : int
             The year up to which embeddings were created from PubMed abstracts. Training is done with clinical trials data up to the target year
         begin_year : int
-            The first year of the validation data
+            The first year of the test data
         end_year : int
-            The last year of the validation data
+            The last year of the test data
         factor : int
             We randomly choose factor-times as many negative training examples as there is positive training examples
         """
@@ -176,25 +176,14 @@ class KcetDatasetGenerator:
             raise ValueError("year must be an integer")
         return self._df_phase4[self._df_phase4['year'] <= year]
 
-    def _get_positive_validation_data_set_years_after_target_year(self, old_target_year: int, mid_year: int,
-                                                                  new_target_year: int) -> pd.DataFrame:
-        raise Exception("UNSUPPORTED")
-
     def _get_positive_test_data(self, target_year: int, begin_year: int, end_year: int) -> pd.DataFrame:
         """
-        WAS _get_positive_validation_data_set_years_after_target_year
-        Get all of the positive examples from one year after the old_target_year until the new_target_year.
-        For example, if the old_target_year is 2010 and new_target_year is 2015, then the positive validation set is all positive links from
-        2011 until 2015.
-        -- used for validation in historical validation experiments
+        Get all of the positive examples from begin_year to end_year (inclusive).
+        -- used for test in historical experiments
         """
         within_valid_year_range = (self._df_allphases['year'] >= begin_year) & (self._df_allphases['year'] <= end_year)
-        print("begin", begin_year, "end", end_year)
-        print(self._df_allphases.head(50))
-        df_pos_valid = self._df_allphases[within_valid_year_range]
-        positive_validation_links = Link.fromDataFrameToLinkSet(df_pos_valid)
-        print("df pos valid)")
-        print(df_pos_valid.head(50))
+        df_pos_test = self._df_allphases[within_valid_year_range]
+        positive_test_links = Link.fromDataFrameToLinkSet(df_pos_test)
         # Ground-truth training data is up to the target year only!
         all_phases_positive_links = Link.fromDataFrameToLinkSet(
             self._df_allphases[self._df_allphases['year'] <= target_year])
@@ -202,8 +191,9 @@ class KcetDatasetGenerator:
         kinase_list = []
         cancer_list = []
         n_skipped_link = 0
-        for link in positive_validation_links:
+        for link in positive_test_links:
             if link in all_phases_positive_links:
+                # do not include a positive example if it was already known at training time!
                 n_skipped_link += 1
             else:
                 kinase = link.kinase
@@ -211,17 +201,16 @@ class KcetDatasetGenerator:
                 kinase_list.append(kinase)
                 cancer_list.append(cancer)
         logging.info(
-            "Skipped %d links that were found in the positive all phases set (expected behavior)" % n_skipped_link)
-        df_pos_validation = pd.DataFrame(list(zip(cancer_list, kinase_list)), columns=['mesh_id', 'gene_id'])
-        return df_pos_validation
+            "Skipped %d links for testing that were already present in training data (expected behavior)" % n_skipped_link)
+        return pd.DataFrame(list(zip(cancer_list, kinase_list)), columns=['mesh_id', 'gene_id'])
 
     def _get_positive_test_data_phase_4(self, target_year: int, begin_year: int, end_year: int) -> pd.DataFrame:
         """
-        Get all of the positive links (of phase 4)  after the target year-- used for validation
-        in historical validation experiments
+        Get all of the positive links (of phase 4)  after the target year-- used for test
+        in historical experiments
         """
-        phase_4_after_target_year = (self._df_phase4['year'] >= begin_year) & (self._df_phase4['year'] <= end_year)
-        df_pos_test = self._df_phase4[phase_4_after_target_year]
+        within_valid_year_range = (self._df_phase4['year'] >= begin_year) & (self._df_phase4['year'] <= end_year)
+        df_pos_test = self._df_phase4[within_valid_year_range]
         positive_test_links = Link.fromDataFrameToLinkSet(df_pos_test)
         all_phases_positive_links = Link.fromDataFrameToLinkSet(
             self._df_allphases[self._df_allphases['year'] <= target_year])
@@ -238,13 +227,13 @@ class KcetDatasetGenerator:
                 kinase_list.append(kinase)
                 cancer_list.append(cancer)
         logging.info(
-            "Skipped %d links that were found in the positive all phases set (expected behavior)" % n_skipped_link)
+            "Skipped %d links for testing that were already present in training data (expected behavior)" % n_skipped_link)
         return pd.DataFrame(list(zip(cancer_list, kinase_list)), columns=['mesh_id', 'gene_id'])
 
     def _get_negative_test_data(self, negative_df: pd.DataFrame, year: int) -> pd.DataFrame:
         """
-        Get negative examples after the target year-- used for validation
-        in historical validation experiments. Note that we take examples that are negative
+        Get negative examples after the target year-- used for testing
+        in historical experiments. Note that we take examples that are negative
         from the perspective of the current time -- we are taking factor-times more negative
         examples than positive examples, and this function chooses a set that is distinct
         from the set of examples use prior to the target year (the same size as the
@@ -275,7 +264,7 @@ class KcetDatasetGenerator:
                 continue
             negative_links.add(randomLink)
         logging.info("Skipped %d links that were found previously (expected behavior)" % n_skipped_link)
-        logging.info("We generated a negative validation set with %d examples (the positive set has %d)" % (
+        logging.info("We generated a negative test set with %d examples (the positive set has %d)" % (
             len(negative_links), len(positive_links)))
         # format as a pandas dataframe
         negative_dict_list = [l.to_dict() for l in negative_links]
@@ -290,14 +279,11 @@ class KcetDatasetGenerator:
         We do this simply by making a key out of the mesh and gene ids and keeping track of this.
         """
         if not isinstance(pos_training_df, pd.DataFrame):
-            print(type(pos_training_df))
             raise ValueError("pos training df must be a pandas dataframe")
         unique_pairs = set()
         for i, row in pos_training_df.iterrows():
             key = row['mesh_id'] + '-' + row['gene_id']
-            print(key)
             unique_pairs.add(key)
-        print("1 {} 2 {}".format(pos_training_df.shape[0], len(unique_pairs)))
         return len(unique_pairs)
 
     def _get_negative_training_dataset(self, pos_training_df: pd.DataFrame, year: int,

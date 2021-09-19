@@ -1,3 +1,6 @@
+from .clinical_trial import ClinicalTrial
+from .kinase_inhibitor import KinaseInhibitor
+
 import os
 import pandas as pd
 from pathlib import Path
@@ -5,8 +8,9 @@ from collections import defaultdict
 import datetime
 import copy
 from typing import List, Dict
-from .clinical_trial import ClinicalTrial
-from .kinase_inhibitor import KinaseInhibitor
+import logging
+
+logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
 
 class Entry:
@@ -51,6 +55,7 @@ class CTParserByPhase:
     """
     A parser for the clinical_trials_data file that is produced by yactp.  (https://github.com/monarch-initiative/yactp).
     """
+
     def __init__(self,
                  clinical_trials: str,
                  year: int = None):
@@ -162,7 +167,7 @@ class CTParserByPhase:
         trials = self._get_ct_by_phase()
         # sanity check-make a set of the medications
         medications = {t.drug for t in trials}
-        print("[INFO] Parsed data for %d medications." % len(medications))
+        logging.info("Parsed data for %d medications." % len(medications))
         pki_dict = defaultdict(KinaseInhibitor)
         validation_pki_dict = defaultdict(KinaseInhibitor)
         for t in trials:
@@ -190,7 +195,6 @@ class CTParserByPhase:
         extended_dict_list = []  ## The dictionaries where we map the PKIs to kinases/genes ids
         for dct in dict_list:
             medication = dct['pki']
-            #print(medication)
             if medication is None:
                 raise ValueError("Could not extract PKI")  # should never happen
             if not medication in self._drug_kinase_links:
@@ -198,14 +202,13 @@ class CTParserByPhase:
                 raise ValueError("Could not find " + medication + " in pki to pk dict")
             lst = self._drug_kinase_links[medication]
             for kinase in lst:
-                if not kinase in self._genesymbol_to_id_map:
+                if kinase not in self._genesymbol_to_id_map:
                     # should never happen
-                    print(kinase)
                     raise ValueError("Could not find " + kinase + " in gene id map")
-                geneid = self._genesymbol_to_id_map[kinase]
+                gene_id = self._genesymbol_to_id_map[kinase]
                 extended_d = copy.deepcopy(dct)
                 extended_d['kinase'] = kinase
-                extended_d['gene_id'] = geneid
+                extended_d['gene_id'] = gene_id
                 extended_dict_list.append(extended_d)
         if removeRedundantEntries:
             unique_list = []
@@ -213,7 +216,7 @@ class CTParserByPhase:
             for entry in extended_dict_list:
                 # form a key that is unique for the gene/kinase combination
                 key = entry['mesh_id'] + entry['gene_id']
-                if not key in seen_entries:
+                if key not in seen_entries:
                     seen_entries.add(key)
                     unique_list.append(entry)
             df = pd.DataFrame.from_records([d for d in unique_list])
@@ -232,7 +235,6 @@ class CTParserByPhase:
             dict_list.extend(v.get_data_frame_all_phases())
         df = self._get_data_frame(dict_list=dict_list, removeRedundantEntries=removeRedundantEntries)
         return df
-
 
     def get_phase_4(self, removeRedundantEntries: bool = False):
         """
