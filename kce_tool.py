@@ -94,21 +94,6 @@ The kcet commands are:
         pkpki = PkPkiFilter()
         pkpki.output_to_file(outfilename=args.outfilename, n_pki_limit=args.max_multiplicity)
 
-    def rf(self):
-        parser = argparse.ArgumentParser(
-            description='random forest classifier')
-        parser.add_argument('-c', '--ctfile', required=True, help="path to ct file")
-        parser.add_argument('-t', '--targetyear', default=2010, type=int, help="target year")
-        parser.add_argument('-m', '--midyear', default=2014, type=int, help="mid year")
-        parser.add_argument('-n', '--numyears', default=1, type=int, help="num year")
-        parser.add_argument('-e', '--embedding', required=True, help="embedding file")
-        parser.add_argument('-w', '--words', required=True, help="words file (matches embeddings)")
-        args = parser.parse_args(sys.argv[2:])
-        datagen = KcetDatasetGenerator(clinical_trials=args.ctfile)
-        krf = KcetRandomForest(data_gen=datagen, target=args.targetyear, embedddingfile=args.embedding, wordsfile=args.words)
-        num_years = int(args.numyears)
-        midyear = int(args.midyear)
-        krf.classify(num_years_later=num_years, mid_year=midyear)
 
 
 if __name__ == '__main__':
