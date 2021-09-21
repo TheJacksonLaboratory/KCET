@@ -126,14 +126,12 @@ def rrf(targetyear: int, test_years: list, outname: str, n_pk: int, phase4: bool
     return pr_data
 
 
-targetyear = 2010
-prediction_years_by2 = [(2011, 2012), (2013, 2014), (2015, 2016), (2017, 2018), (2019, 2020)]
-prediction_years_upto2020 = [(2011, 2011), (2011, 2012), (2011, 2014), (2011, 2016), (2011, 2018), (2011, 2020)]
-prediction2014_years_by2 = [(2015, 2016), (2017, 2018), (2019, 2020)]
-prediction2014_years_upto2020 = [ (2014, 2014), (2014, 2016), (2014, 2018), (2014, 2020)]
 
 
-def run_rrf2010(year: int):
+def run_rrf2010():
+    year = 2010
+    prediction_years_by2 = [(2011, 2012), (2013, 2014), (2015, 2016), (2017, 2018), (2019, 2020)]
+    prediction_AY = [(2011, 2011), (2011, 2012), (2011, 2014), (2011, 2016), (2011, 2018), (2011, 2020)]
     pr_data = []
     for npk in [1, 2, 5, 10]:
         outname = "m{}_{}_by_two_allphases.pdf".format(npk, year)
@@ -143,35 +141,40 @@ def run_rrf2010(year: int):
         dat = rrf(targetyear=year, test_years=prediction_years_by2, outname=outname, n_pk=npk, phase4=True)
         pr_data.append(dat)
         outname = "m{}_{}_allyears_allphases.pdf".format(npk, year)
-        dat = rrf(targetyear=year, test_years=prediction_years_by2, outname=outname, n_pk=npk, phase4=False)
+        dat = rrf(targetyear=year, test_years=prediction_AY, outname=outname, n_pk=npk, phase4=False)
         pr_data.append(dat)
         outname = "m{}_{}_allyears_phase4.pdf".format(npk, year)
-        dat = rrf(targetyear=year, test_years=prediction_years_by2, outname=outname, n_pk=npk, phase4=True)
+        dat = rrf(targetyear=year, test_years=prediction_AY, outname=outname, n_pk=npk, phase4=True)
         pr_data.append(dat)
     return pr_data
 
-def run_rrf2014(year: int):
+def run_rrf2014():
+    year = 2014
+    prediction_by2 = [(2015, 2016), (2017, 2018), (2019, 2020)]
+    prediction_AY = [(2015, 2015), (2015, 2016), (2015, 2018), (2015, 2020)]
     pr_data = []
     for npk in [1, 2, 5, 10]:
         outname = "m{}_{}_by_two_allphases.pdf".format(npk, year)
-        dat = rrf(targetyear=year, test_years=prediction_years_upto2020, outname=outname, n_pk=npk, phase4=False)
+        dat = rrf(targetyear=year, test_years=prediction_by2, outname=outname, n_pk=npk, phase4=False)
         pr_data.append(dat)
         outname = "m{}_{}_by_two_phase4.pdf".format(npk, year)
-        dat = rrf(targetyear=year, test_years=prediction_years_upto2020, outname=outname, n_pk=npk, phase4=True)
+        dat = rrf(targetyear=year, test_years=prediction_by2, outname=outname, n_pk=npk, phase4=True)
         pr_data.append(dat)
         outname = "m{}_{}_allyears_allphases.pdf".format(npk, year)
-        dat = rrf(targetyear=year, test_years=prediction_years_upto2020, outname=outname, n_pk=npk, phase4=False)
+        dat = rrf(targetyear=year, test_years=prediction_AY, outname=outname, n_pk=npk, phase4=False)
         pr_data.append(dat)
         outname = "m{}_{}_allyears_phase4.pdf".format(npk, year)
-        dat = rrf(targetyear=year, test_years=prediction_years_upto2020, outname=outname, n_pk=npk, phase4=True)
+        dat = rrf(targetyear=year, test_years=prediction_AY, outname=outname, n_pk=npk, phase4=True)
         pr_data.append(dat)
     return pr_data
 
 
 
-prdat = run_rrf2010(2010)
-df1 = pd.DataFrame.from_records(prdat)
+
+
+prdat1 = run_rrf2010()
+df1 = pd.DataFrame.from_records(prdat1)
 df1.to_csv('pr2010.csv', index=False)
-prdat = run_rrf2010(2014)
-df1 = pd.DataFrame.from_records(prdat)
-df1.to_csv('pr2014.csv', index=False)
+prdat2 = run_rrf2014()
+df2 = pd.DataFrame.from_records(prdat2)
+df2.to_csv('pr2014.csv', index=False)

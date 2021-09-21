@@ -73,7 +73,6 @@ class KcetDatasetGenerator:
 
     def __init__(self, clinical_trials: str, embeddings: str, words: str, n_pk: int = 5) -> None:
         kcetParser = KcetParser()
-        #self._pki_to_kinase_dict = kcetParser.get_pki_to_kinase_list_dict()
         self._pki_to_kinase_dict = kcetParser._get_pki_to_kinase_list_dict_max_pk(n_pk=n_pk)
         self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()
         self._mesh_list = kcetParser.get_mesh_id_list()
