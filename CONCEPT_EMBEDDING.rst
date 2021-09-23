@@ -110,7 +110,7 @@ The following code uses embiggen to perform embedding.
 Saving the embeddings
 ^^^^^^^^^^^^^^^^^^^^^
 
-Finally, we save the results of embedding to files.
+Finally, we save the results of embedding to files. The embedding and word files in the project zenodo repository (see README) were generated in this way.
 
 .. code-block:: python
 
