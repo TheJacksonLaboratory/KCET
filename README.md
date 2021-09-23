@@ -26,7 +26,7 @@ file formats).
 
 ## Start to finish tutorial
 
-See the [tutorial](TUTORIAL.rst) for a streamlined, start to finish explanation of the entire pipeline.
+See the [tutorial](tutorial/TUTORIAL.rst) for a streamlined, start to finish explanation of the entire pipeline.
 
 The notebooks in this repository demonstrate the analysis steps that follow generation of word/concept embedddings.
 
@@ -110,11 +110,4 @@ python kce_tool.py pkilist
 ```
 
 This script generates the file ``protein_kinase_inhibitors.txt``
-
-## Use the yactp (yet another clinical trials parser) tool
-
-Follow the instructions in the [yactp](https://github.com/monarch-initiative/yactp) repository
-to generate the ``clinical_trials_by_phase.tsv`` file. We use the  ``protein_kinase_inhibitors.txt`` file
-as the input for yactp. 
- 
 

@@ -16,7 +16,7 @@ a `zenodo repository <https://zenodo.org/record/5329035>`_ with the files that a
 1. Concept replacement and PubMed abstract processing
 #####################################################
 
-The first step of our analysis consists in the creation of concept embeddings based on ``relevant'' abstracts in PubMed. 
+The first step of our analysis consists in the creation of concept embeddings based on ``relevant`` abstracts in PubMed.
 PubMed abstracts were downloaded (see `here <https://www.nlm.nih.gov/databases/download/pubmed_medline.html>`_ for instructions)
 and processed to replace words and phrases by corresponding concept ids based on the `PubTator resource <https://www.ncbi.nlm.nih.gov/research/pubtator/>`_. 
 
@@ -30,13 +30,21 @@ PubTator has adopted a new format (BioCXML) and the marea scripts will no longer
 ####################
 
 
-Word embedding was performed with our `embiggen package <https://pypi.org/project/embiggen/>`_ , which leverages tensorflow 2 for a variety of machine learning algorithms. 
+Word embedding was performed with our `embiggen package <https://pypi.org/project/embiggen/>`_ , which leverages
+tensorflow 2 for a variety of machine learning algorithms. This `page <CONCEPT_EMBEDDING.rst>`_ presents the script together with explanations.
 
-The following script shows how to perform embedding using embiggen. We generated  embeddings with abstracts up to 2010 and with abstracts up to 2020. The resulting
-embedding files (with their corresponding label files) are available in the zenodo repository.
+3. Clinical Trials data
+#######################
+
+The purpose of this step is to generate a table of data about clinical trials that investigated the use of protein-kinase inhibitors (PKIs) to treat cancer.
+This `page <CLINICAL_TRIALS.rst> presents details.
+
+4. Random forest classification
+###############################
+
+The final step of the pipeline performs random forest classification on vectors representing protein-kinase cancer pairs.
+The notebook `randomForestClassification <../notebooks/randomForestClassification.ipynb>`_ explains this step in detail.
+See also the script `runRandomForest <../scripts/runRandomForest.py>`_. Novel predictions (2021 onwards) were generated with
+code that is explained in the notebook `novelPredictions <../notebooks/novelPredictions.ipynb>`_.
 
 
-In the following script, ``pubmed.tsv`` represents the output of the preprocessing scripts for 2010 or 2020. 
-The script outputs two files, ``embedding.npy`` (with the embedded vectors) and ``words.txt`` (with the corresponding word or concept labels).
-
- 
