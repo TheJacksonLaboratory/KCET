@@ -37,7 +37,7 @@ tensorflow 2 for a variety of machine learning algorithms. This `page <CONCEPT_E
 #######################
 
 The purpose of this step is to generate a table of data about clinical trials that investigated the use of protein-kinase inhibitors (PKIs) to treat cancer.
-This `page <CLINICAL_TRIALS.rst> presents details.
+This `page <CLINICAL_TRIALS.rst>`_ presents details.
 
 4. Random forest classification
 ###############################
