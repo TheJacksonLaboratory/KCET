@@ -1,8 +1,7 @@
 import argparse
-from kcet.kcet_dataset_generator import KcetDatasetGenerator
 import sys
 
-from kcet import CTParserByPhase, PkPkiFilter, KcetRandomForest
+from kcet import CTParserByPhase, PkPkiFilter
 
 
 class KinaseCancerEmbeddingTool(object):
