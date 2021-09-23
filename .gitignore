@@ -143,3 +143,4 @@ p3/
 scripts/*.pdf
 scripts/*.csv
 scripts/*.sh
+/scripts/drug_kinase_links.tsv

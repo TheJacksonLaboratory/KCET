@@ -58,8 +58,7 @@ The scripts can be run with the same virtual environment as the notebooks.
 We provide the following scripts:
 
 - [runRandomForest](scripts/runRandomForest.py): The script generates all of the ROC/PR plots that are presented in the manuscript and supplemental material.
-
-
+- [pkpki](scripts/pkpki.py): Generate file with protein kinase (PK) to protein kinase inhibitor (PKI) links. This is not needed for the analysis but was useful to check the data being used for classification by hand for quality control purposes.
 
 
 ## running the tool
