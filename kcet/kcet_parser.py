@@ -4,6 +4,9 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict, Set
 from collections import defaultdict
+import logging
+
+logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
 
 class KcetParser:
@@ -33,25 +36,25 @@ class KcetParser:
             raise FileNotFoundError("Could not find file at %s" % self._drug_kinase_links)
         # Ingest data
         self._symbol_to_id_map = self._ingest_symbol_to_id_map()
-        print("[INFO] ingested symbol_to_id_map with %d entries such as {'NCBIGene:2870': 'GRK6'}" % len(
+        logging.info("ingested symbol_to_id_map with %d entries such as {'NCBIGene:2870': 'GRK6'}" % len(
             self._symbol_to_id_map))
         # Get reverse map
         self._id_to_symbol_map = {v: k for k, v in self._symbol_to_id_map.items()}
         self._mesh_list = self._ingest_mesh_id_list()
-        print("[INFO] Ingested mesh_id list with %d entries such as 'meshd000008' and 'meshd000069293', " % len(
+        logging.info("Ingested mesh_id list with %d entries such as 'meshd000008' and 'meshd000069293', " % len(
             self._mesh_list))
         self._meshid2disease_map = self._ingest_mesh_to_disease_map()
-        print("[INFO] Ingested _meshid2disease_map with %d entries" % len(self._meshid2disease_map))
+        logging.info("Ingested _meshid2disease_map with %d entries" % len(self._meshid2disease_map))
         self._sym2tdl = self._ingest_symbol_to_tdl_map()
-        print("[INFO] Ingested meshid2disease_map with %d entries" % len(self._sym2tdl))
+        logging.info("Ingested meshid2disease_map with %d entries" % len(self._sym2tdl))
         self._pki_to_kinase = self._ingest_pki_to_kinase_list_dict()
-        print("[INFO] Ingested pki_to_kinase with %d entries" % len(self._pki_to_kinase))
+        logging.info("Ingested pki_to_kinase with %d entries" % len(self._pki_to_kinase))
 
     def _ingest_symbol_to_id_map(self) -> Dict:
         """
         returns a dictionary like this: {'NCBIGene:2870': 'GRK6', 'NCBIGene:140609': 'NEK7', ... }
         """
-        print("[INFO] Reading protein kinase information from %s" % self._prot_kinase_tsv_path)
+        logging.info("Reading protein kinase information from %s" % self._prot_kinase_tsv_path)
         kinase_data = pd.read_csv(self._prot_kinase_tsv_path, sep="\t", header=None)
         symbol_to_id_map = defaultdict(str)
         for i in range(kinase_data.shape[0]):
