@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import RandomizedSearchCV
 
 import logging
+
 logging.basicConfig(filename='kcet.log', level=logging.INFO)
 
 
@@ -41,6 +42,7 @@ class KcetRandomForest:
         """
         # The following four data frames contain the names of the cancers and protein kinases and other columns.
         #
+        """
         if phase4:
             logging.info("classify-getting data for phase 4")
             pos_train_df, neg_train_df, pos_test_df, neg_test_df = \
@@ -51,23 +53,21 @@ class KcetRandomForest:
             pos_train_df, neg_train_df, pos_test_df, neg_test_df = \
                 self._data_generator.get_training_and_test_data(target_year=self._target_year,
                                                                         begin_year=begin_year, end_year=end_year)
+       
         # Now we need to extract the corresponding embedded vectors
         logging.info(
             "classify examples: pos train: {}, neg train {}, pos test {}, neg test {}"
                 .format(len(pos_train_df), len(neg_train_df), len(pos_test_df), len(neg_test_df)))
-        #pos_train_vectors = self._data_generator.get_disease_kinase_difference_vectors(pos_train_df)
-        #neg_train_vectors = self._data_generator.get_disease_kinase_difference_vectors(neg_train_df)
+        """
+        if phase4:
+            pos_train_vectors, neg_train_vectors, pos_test_vectors, neg_test_vectors = self._data_generator.get_training_and_test_embeddings_phase_4(
+                self._target_year, begin_year=begin_year,
+                end_year=end_year)
+        else:
+            pos_train_vectors, neg_train_vectors, pos_test_vectors, neg_test_vectors = self._data_generator.get_training_and_test_embeddings(
+                self._target_year, begin_year=begin_year,
+                end_year=end_year)
 
-        pos_train_vectors, neg_train_vectors, pos_test_vectors, neg_test_vectors= self._data_generator.get_training_and_test_embeddings(self._target_year, begin_year=begin_year,
-                                                                end_year=end_year)
-
-
-        # pos_train_vectors = self._data_generator.get_pos_training_embeddings(target_year=self._target_year)
-        # n_neg_train = len(pos_train_vectors) * self._factor
-        # neg_train_vectors = self._data_generator.get_neg_training_embeddings(target_year=self._target_year, n_neg_examples=n_neg_train)
-        #pos_test_vectors = self._data_generator.get_disease_kinase_difference_vectors(pos_test_df)
-        #neg_test_vectors = self._data_generator.get_disease_kinase_difference_vectors(neg_test_df)
-        # Prepare for random forest training
         n_pos_train = pos_train_vectors.shape[0]
         n_neg_train = neg_train_vectors.shape[0]
         X_train = pd.concat([pos_train_vectors, neg_train_vectors])
@@ -77,7 +77,7 @@ class KcetRandomForest:
         n_neg_test = neg_test_vectors.shape[0]
         logging.info(
             "Setting up RF classification with pos train (difference vectors): {}, neg train {}, pos test {}, neg test {}"
-            .format(n_pos_train, n_neg_train, n_pos_test, n_neg_test))
+                .format(n_pos_train, n_neg_train, n_pos_test, n_neg_test))
         X_test = pd.concat([pos_test_vectors, neg_test_vectors])
         y_test = np.concatenate((np.ones(n_pos_test), np.zeros(n_neg_test)))
         # Perform random grid search for best parameters using the training data
@@ -102,8 +102,7 @@ class KcetRandomForest:
         # Number of features to consider at every split
         max_features = ['auto', 'sqrt']
         # Maximum number of levels in tree
-        max_depth = [10, 20, 30, 40, 50]
-        max_depth.append(None)
+        max_depth = [10, 20, 30, 40, 50, None]
         # Minimum number of samples required to split a node
         min_samples_split = [2, 3, 5, 7, 10]
         # Minimum number of samples required at each leaf node
