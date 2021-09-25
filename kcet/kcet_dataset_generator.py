@@ -148,7 +148,7 @@ class KcetDatasetGenerator:
         n_neg_train = n_pos_train * factor
         negative_training_df = self.get_neg_training_embeddings(target_year=target_year, n_neg_examples=n_neg_train)
         pos_test = self.get_positive_test_embeddings(target_year=target_year, begin_year=begin_year, end_year=end_year)
-        n_neg_test = len(pos_test)
+        n_neg_test = factor * len(pos_test)
         neg_test = self.get_negative_test_embeddings(negative_df=negative_training_df, year=target_year,
                                                      n_negative_test=n_neg_test)
         return positive_training_df, negative_training_df, pos_test, neg_test
@@ -169,7 +169,7 @@ class KcetDatasetGenerator:
             raise ValueError("Begin year cannot be before target year")
         positive_test_df = self.get_positive_test_embeddings(target_year=target_year, begin_year=begin_year,
                                                              end_year=end_year, phase4=True)
-        n_pos_test = len(positive_test_df)
+        n_pos_test = factor * len(positive_test_df)
         negative_test_df = self.get_negative_test_embeddings(negative_df=negative_training_df, year=target_year,
                                                              n_negative_test=n_pos_test)
 
