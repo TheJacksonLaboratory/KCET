@@ -19,9 +19,11 @@ class KcetRandomForest:
                  data_gen: KcetDatasetGenerator,
                  embedddingfile: str,
                  wordsfile: str,
-                 target: int) -> None:
+                 target: int,
+                 factor: int = 10) -> None:
         self._data_generator = data_gen
         self._target_year = target
+        self._factor = factor
         if not os.path.isfile(embedddingfile):
             raise FileNotFoundError("Could not find embedding file at " + embedddingfile)
         if not os.path.isfile(wordsfile):
@@ -53,10 +55,18 @@ class KcetRandomForest:
         logging.info(
             "classify examples: pos train: {}, neg train {}, pos test {}, neg test {}"
                 .format(len(pos_train_df), len(neg_train_df), len(pos_test_df), len(neg_test_df)))
-        pos_train_vectors = self._data_generator.get_disease_kinase_difference_vectors(pos_train_df)
-        neg_train_vectors = self._data_generator.get_disease_kinase_difference_vectors(neg_train_df)
-        pos_test_vectors = self._data_generator.get_disease_kinase_difference_vectors(pos_test_df)
-        neg_test_vectors = self._data_generator.get_disease_kinase_difference_vectors(neg_test_df)
+        #pos_train_vectors = self._data_generator.get_disease_kinase_difference_vectors(pos_train_df)
+        #neg_train_vectors = self._data_generator.get_disease_kinase_difference_vectors(neg_train_df)
+
+        pos_train_vectors, neg_train_vectors, pos_test_vectors, neg_test_vectors= self._data_generator.get_training_and_test_embeddings(self._target_year, begin_year=begin_year,
+                                                                end_year=end_year)
+
+
+        # pos_train_vectors = self._data_generator.get_pos_training_embeddings(target_year=self._target_year)
+        # n_neg_train = len(pos_train_vectors) * self._factor
+        # neg_train_vectors = self._data_generator.get_neg_training_embeddings(target_year=self._target_year, n_neg_examples=n_neg_train)
+        #pos_test_vectors = self._data_generator.get_disease_kinase_difference_vectors(pos_test_df)
+        #neg_test_vectors = self._data_generator.get_disease_kinase_difference_vectors(neg_test_df)
         # Prepare for random forest training
         n_pos_train = pos_train_vectors.shape[0]
         n_neg_train = neg_train_vectors.shape[0]
@@ -79,7 +89,7 @@ class KcetRandomForest:
         # Now estimate the performance on the held out testing data
         y_pred = best_model.predict(X_test)
         yproba = best_model.predict_proba(X_test)[::, 1]
-        return y_pred, y_test, yproba, n_pos_test
+        return y_pred, y_test, yproba, n_pos_train, n_neg_train, n_pos_test, n_neg_test
 
     @staticmethod
     def _init_random_grid():

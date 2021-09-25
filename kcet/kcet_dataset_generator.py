@@ -1,4 +1,6 @@
 import random
+
+from pandas.core.frame import DataFrame
 from .kcet_parser import KcetParser
 from .ct_by_phase_parser import CTParserByPhase
 
@@ -51,6 +53,16 @@ class Link:
             linkset.add(L)
         return linkset
 
+    @staticmethod
+    def fromEmbeddingsToLinkSet(df: pd.DataFrame) -> Set:
+        linkset = set();
+        for i, row in df.iterrows():
+            # i (the index) is like this ncbigene7010-meshd018195
+            k,c = i.split("-")
+            L = Link(kinase=k, cancer=c)
+            linkset.add(L)
+        return linkset
+
 
 def get_current_year():
     now = datetime.datetime.now()  # default to current year
@@ -79,6 +91,7 @@ class KcetDatasetGenerator:
         parser = CTParserByPhase(clinical_trials=clinical_trials)
         self._df_allphases = parser.get_all_phases(removeRedundantEntries=True)  # all positive data, phase 1,2,3,4
         self._df_phase4 = parser.get_phase_4(removeRedundantEntries=True)  # all positive data, phase 4 only
+        self._n_pk = n_pk
         # add the embeddings
         if not os.path.exists(embeddings):
             raise FileNotFoundError("Could not find embedding file at %s" % embeddings)
@@ -110,7 +123,6 @@ class KcetDatasetGenerator:
     def get_training_and_test_data(self, target_year: int, begin_year: int, end_year: int, factor: int = 10) -> \
             Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        WAS get_data_years_after_target_year_upto_later_year
         Get positive and negative training data for the target year 
         Get data for test that goes from begin_year to end_year
         Parameters
@@ -137,10 +149,155 @@ class KcetDatasetGenerator:
         negative_test_df = self._get_negative_test_data(negative_df=negative_training_df, year=target_year)
         return positive_training_df, negative_training_df, positive_test_df, negative_test_df
 
-    def get_data_years_after_target_year_upto_later_year_phase_4(self, target_year: int, mid_year: int,
-                                                                 factor: int = 10,
-                                                                 num_years_later: int = 1) -> Tuple[pd.DataFrame]:
-        raise Exception("Not supported")
+    def get_training_and_test_embeddings(self, target_year: int, begin_year: int, end_year: int, factor: int = 10) -> \
+            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+        positive_training_df = self.get_pos_training_embeddings(target_year=target_year)
+        n_pos_train = len(positive_training_df)
+        n_neg_train = n_pos_train * factor
+        negative_training_df = self.get_neg_training_embeddings(target_year=target_year, n_neg_examples=n_neg_train)
+        pos_test = self.get_positive_test_embeddings(target_year=target_year, begin_year=begin_year, end_year=end_year)
+        n_neg_test = len(pos_test)
+        neg_test = self.get_negative_test_embeddings(negative_df=negative_training_df, year=target_year, n_negative_test=n_neg_test)
+        return positive_training_df, negative_training_df, pos_test, neg_test
+
+    def get_pos_training_embeddings(self, target_year:int, phase4:bool=False) -> pd.DataFrame:
+        '''
+        get the positive embeddings for training
+        if phase4 is True, then TODO
+        '''
+        pos_train_df = self._get_positive_training_data_set(year=target_year)
+        pos_train_vectors = self.get_disease_kinase_difference_vectors(pos_train_df)
+        return pos_train_vectors
+
+    def get_neg_training_embeddings(self, target_year: int,  n_neg_examples: int) -> pd.DataFrame:
+        '''
+        get negative embeddings for training
+        We do so by choosing from among embeddings that are not positive
+        n_neg_examples: number of embeddings to get (in general, this is 10 times the number of positive data for training)
+        We take Random non-links that were not listed in any of phase 1,2,3,4 in the year up 
+        to and including self._year
+        '''
+        kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
+        cancer_id_list = self._mesh_list
+        # The following help to keep track of positive examples
+        positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= target_year])
+        negative_links = set()
+        n_skipped_link = 0
+        i = 0  # use i to limit the number of attempts in case there is some problem
+        df = pd.DataFrame(columns=self._embeddings_df.columns)
+        while len(df) < n_neg_examples and i < 1e6:
+            i += 1
+            mesh_id = random.choice(cancer_id_list)
+            ncbigene_id = random.choice(kinase_list)
+            randomLink = Link(kinase=ncbigene_id, cancer=mesh_id)
+            # Do not add a link from the positive set to the negative set 
+            # Note that this can happen by chance and is not worrisome, but we log it
+            if randomLink in positive_links or randomLink in negative_links:
+                n_skipped_link += 1
+                continue
+            negative_links.add(randomLink)
+            ncbigene_id_embedding = None
+            mesh_id_embedding = None
+            if ncbigene_id in self._embeddings_df.index:
+                ncbigene_id_embedding = self._embeddings_df.loc[ncbigene_id]
+            if mesh_id in self._embeddings_df.index:
+                mesh_id_embedding = self._embeddings_df.loc[mesh_id]
+            if ncbigene_id_embedding is not None and mesh_id_embedding is not None:
+                diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
+                label = "%s-%s" % (ncbigene_id, mesh_id)
+                df.loc[label] = diff_kinase_mesh
+            i += 1
+            if i % 10000 == 0 and i > 0:
+                logging.info("Created %d/%d (%.1f%%) difference vectors" % (i, n_neg_examples, 100.0 * i / n_neg_examples))
+        logging.info("Extracted %s kinase-cancer difference vectors" % len(df))
+        return df
+
+    def get_positive_test_embeddings(self, target_year: int, begin_year: int, end_year: int) -> pd.DataFrame:
+        """
+        Get all of the positive examples from begin_year to end_year (inclusive).
+        -- used for test in historical experiments
+        """
+        within_valid_year_range = (self._df_allphases['year'] >= begin_year) & (self._df_allphases['year'] <= end_year)
+        df_pos_test = self._df_allphases[within_valid_year_range]
+        positive_test_links = Link.fromDataFrameToLinkSet(df_pos_test)
+        # Ground-truth training data is up to the target year only!
+        all_phases_positive_links = Link.fromDataFrameToLinkSet(
+            self._df_allphases[self._df_allphases['year'] <= target_year])
+
+        kinase_list = []
+        cancer_list = []
+        n_skipped_link = 0
+        df = pd.DataFrame(columns=self._embeddings_df.columns)
+        for link in positive_test_links:
+            if link in all_phases_positive_links:
+                # do not include a positive example if it was already known at training time!
+                n_skipped_link += 1
+                continue
+            ncbigene_id = link.kinase
+            mesh_id = link.cancer
+            kinase_list.append(ncbigene_id)
+            cancer_list.append(mesh_id)
+            ncbigene_id_embedding = None
+            mesh_id_embedding = None
+            if ncbigene_id in self._embeddings_df.index:
+                ncbigene_id_embedding = self._embeddings_df.loc[ncbigene_id]
+            if mesh_id in self._embeddings_df.index:
+                mesh_id_embedding = self._embeddings_df.loc[mesh_id]
+            if ncbigene_id_embedding is not None and mesh_id_embedding is not None:
+                diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
+                label = "%s-%s" % (ncbigene_id, mesh_id)
+                df.loc[label] = diff_kinase_mesh
+        logging.info(
+            "Skipped %d links for testing that were already present in training data (expected behavior)" % n_skipped_link)
+        return df
+
+    def get_negative_test_embeddings(self, negative_df: pd.DataFrame, year: int, n_negative_test) -> pd.DataFrame:
+        """
+        Get negative examples after the target year-- used for testing
+        in historical experiments. Note that we take examples that are negative
+        from the perspective of the current time -- we are taking factor-times more negative
+        examples than positive examples, and this function chooses a set that is distinct
+        from the set of examples use prior to the target year (negative_df).
+        """
+
+        kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
+        cancer_id_list = self._mesh_list
+        positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= year])
+        pretarget_negative_links = Link.fromEmbeddingsToLinkSet(negative_df)
+        negative_links = set()
+        n_skipped_link = 0
+        df = pd.DataFrame(columns=self._embeddings_df.columns)
+        i = 0  # use i to limit the number of attempts in case there is some problem
+        while len(df) < n_negative_test and i < 1e6:
+            i += 1
+            mesh_id = random.choice(cancer_id_list)
+            ncbigene_id = random.choice(kinase_list)
+            randomLink = Link(kinase=ncbigene_id, cancer=mesh_id)
+            if randomLink in positive_links:
+                n_skipped_link += 1
+                continue
+            if randomLink in pretarget_negative_links:
+                n_skipped_link += 1
+                continue
+            if randomLink in negative_links:
+                n_skipped_link += 1
+                continue
+            negative_links.add(randomLink)
+            ncbigene_id_embedding = None
+            mesh_id_embedding = None
+            if ncbigene_id in self._embeddings_df.index:
+                ncbigene_id_embedding = self._embeddings_df.loc[ncbigene_id]
+            if mesh_id in self._embeddings_df.index:
+                mesh_id_embedding = self._embeddings_df.loc[mesh_id]
+            if ncbigene_id_embedding is not None and mesh_id_embedding is not None:
+                diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
+                label = "%s-%s" % (ncbigene_id, mesh_id)
+                df.loc[label] = diff_kinase_mesh
+
+        logging.info("Skipped %d links that were found previously (expected behavior)" % n_skipped_link)
+        logging.info("We generated a negative test set with %d examples (the positive set has %d)" % (
+            len(negative_links), len(positive_links)))
+        return df
 
     def get_training_and_test_data_phase_4(self, target_year: int, begin_year: int, end_year: int, factor: int = 10) -> \
             Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -298,7 +455,6 @@ class KcetDatasetGenerator:
         kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
         positive_links = Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= year])
-        # positive_training_links = Link.fromDataFrameToLinkSet(pos_training_df)
         n_pos_examples = self._get_unique_positive_training_count(
             pos_training_df)  # number of links in positive training set
         n_neg_examples = n_pos_examples * factor
@@ -389,3 +545,40 @@ class KcetDatasetGenerator:
         logging.info("Could not identify %d gene ids" % len(unidentified_genes))
         logging.info("Could not identify %d MeSH ids" % len(unidentified_cancers))
         return df
+
+    def get_summary(self)-> pd.DataFrame:
+        """
+        Return a data frame with counts and descriptive statistics about the current dataset that can be used
+        for display in a Jupyter notebook etc.
+        """
+        data = []
+        n_pki = len(self._pki_to_kinase_dict)
+        data.append(['protein kinase inhibitors', "{:d}".format(n_pki)])
+        data.append(['n_pk', "{:d}".format(self._n_pk)])
+        df = self._pki_to_kinase_dict.groupby("PKI")["PK"].count()
+        mean_pk_per_pki = np.mean(df)
+        data.append(['mean PKs per PKI (DrugCentral dataset)', "{:.2f}".format(mean_pk_per_pki)])
+        n_unique_kinases = len(pd.unique(self._pki_to_kinase_dict['PK']))
+        n_pairs = sum([len(v) for _,v in self._pki_to_kinase_dict.items()])
+        data.append(['PKI/PK pairs in DrugCentral dataset', "{:d}".format(n_pairs)])
+        data.append(['protein kinases in DrugCentral dataset', "{:d}".format(n_unique_kinases)])
+        n_ncbi_kinases = len(self._symbol_to_id_map)
+        data.append(['protein kinases in NCBI gene dataset', "{:d}".format(n_ncbi_kinases)])
+        n_mesh = len(self._mesh_list)
+        data.append(['MeSH Ids for cancer concepts', "{:d}".format(n_mesh)])
+        n_all_phases = len(self._df_allphases)
+        data.append(['Clinical trials included in this study', "{:d}".format(n_all_phases)])
+        for i in [1,2,3,4]:
+            phase = 'Phase {}'.format(i)
+            n = len(self._df_allphases[self._df_allphases['phase']==phase])
+            message = 'Phase {} trials included in this analysis'.format(i)
+            data.append([message, "{:d}".format(n)])
+        n_embeddings = len(self._embeddings_df)
+        data.append(['word/concept embeddings', "{:d}".format(n_embeddings)])
+        return pd.DataFrame(data, columns = ['Item', 'Value'])
+
+
+        
+       
+
+
