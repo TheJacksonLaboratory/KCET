@@ -212,7 +212,7 @@ class KcetParser:
                 pki_to_kinase[pki].append(pk)
         return pki_to_kinase
 
-    def _get_pki_to_kinase_list_dict_max_pk(self, n_pk: int):
+    def _get_pki_to_kinase_list_dict_max_pk(self, n_pk: int) -> pd.DataFrame:
         """
         This function retrieves links between protein-kinase inhibitors and the protein kinases
         that are inhibited. Since may PKIs inhibit multiple PKs, the PkPkiFilter gets up to

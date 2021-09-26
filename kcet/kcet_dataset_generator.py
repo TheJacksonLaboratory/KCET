@@ -89,7 +89,9 @@ class KcetDatasetGenerator:
 
     def __init__(self, clinical_trials: str, embeddings: str, words: str, n_pk: int = 5) -> None:
         kcetParser = KcetParser()
-        self._pki_to_kinase_dict = kcetParser._get_pki_to_kinase_list_dict_max_pk(n_pk=n_pk)
+        self._pki_to_kinase_df = kcetParser._get_pki_to_kinase_list_dict_max_pk(n_pk=n_pk)
+        if not isinstance(self._pki_to_kinase_df, pd.DataFrame):
+            raise ValueError("_pki_to_kinase_dict needs to be a DataFrame")
         self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()
         self._mesh_list = kcetParser.get_mesh_id_list()
         parser = CTParserByPhase(clinical_trials=clinical_trials)
@@ -423,16 +425,15 @@ class KcetDatasetGenerator:
         for display in a Jupyter notebook etc.
         """
         data = []
-        n_pki = len(self._pki_to_kinase_dict)
-        data.append(['protein kinase inhibitors', "{:d}".format(n_pki)])
-        data.append(['n_pk', "{:d}".format(self._n_pk)])
-        df = self._pki_to_kinase_dict.groupby("PKI")["PK"].count()
+        n_pki = len(self._pki_to_kinase_df)
+        data.append(['Above threshold PKI/PKI links', "{:d}".format(n_pki)])
+        df = self._pki_to_kinase_df.groupby("PKI")["PK"].count()
         mean_pk_per_pki = np.mean(df)
         data.append(['mean PKs per PKI (DrugCentral dataset)', "{:.2f}".format(mean_pk_per_pki)])
-        n_unique_kinases = len(pd.unique(self._pki_to_kinase_dict['PK']))
-        n_pairs = sum([len(v) for _, v in self._pki_to_kinase_dict.items()])
-        data.append(['PKI/PK pairs in DrugCentral dataset', "{:d}".format(n_pairs)])
+        n_unique_kinases = len(pd.unique(self._pki_to_kinase_df['PK']))
         data.append(['protein kinases in DrugCentral dataset', "{:d}".format(n_unique_kinases)])
+        n_unique_PKIs = len(pd.unique(self._pki_to_kinase_df['PKI']))
+        data.append(['protein kinase inhibitors in DrugCentral dataset', "{:d}".format(n_unique_PKIs)])
         n_ncbi_kinases = len(self._symbol_to_id_map)
         data.append(['protein kinases in NCBI gene dataset', "{:d}".format(n_ncbi_kinases)])
         n_mesh = len(self._mesh_list)

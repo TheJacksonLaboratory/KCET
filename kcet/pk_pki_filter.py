@@ -1,6 +1,7 @@
 import os
 import csv
 from collections import defaultdict
+from typing import List
 import pandas as pd
 import logging
 
@@ -120,7 +121,7 @@ class PkPkiFilter:
                 self._pk_pki_list.append(pk_pki)
         logging.info("Ingested %d pk pki links with Kd data", len(self._pk_pki_list))
 
-    def _get_max_affinity_links(self, pk_pki, n_pki_limit: int):
+    def _get_max_affinity_links(self, pk_pki, n_pki_limit: int) -> List:
         if not isinstance(pk_pki, list):
             raise ValueError("pk_pki must be a list")
         if len(pk_pki) == 0:
@@ -133,7 +134,7 @@ class PkPkiFilter:
         sorted_pk_pki = sorted(pk_pki)
         return sorted_pk_pki[:n_pki_limit]
 
-    def get_valid_pk_pki(self, n_pki_limit: int = 5, threshold: float = 0.03):
+    def get_valid_pk_pki(self, n_pki_limit: int = 5, threshold: float = 0.03) -> pd.DataFrame:
         """
         n_pki_limit: Limit on the number of PKs that are inhibited per PKI
         We do not want to include PKIs that are very promiscuous because the relation between
