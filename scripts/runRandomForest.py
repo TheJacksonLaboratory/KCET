@@ -1,15 +1,14 @@
 import os
 import sys
-
-sys.path.insert(0, os.path.abspath('..'))
-
-from kcet import KcetDatasetGenerator, KcetRandomForest
 import pandas as pd
 import numpy as np
 from sklearn.metrics import roc_auc_score, roc_curve, auc, precision_recall_curve, precision_score, recall_score, \
     average_precision_score, confusion_matrix
 import matplotlib
 import matplotlib.pyplot as plt
+sys.path.insert(0, os.path.abspath('..'))
+from kcet import KcetDatasetGenerator, KcetRandomForest
+
 
 plt.rc('axes', labelsize=18)
 plt.rc('xtick', labelsize=16)  # fontsize of the tick labels
