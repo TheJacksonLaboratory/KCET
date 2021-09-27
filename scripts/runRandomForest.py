@@ -72,7 +72,7 @@ def plot_one_precision_recall_curve(axis, y_test, y_pred, begin_year: int, end_y
     best_f1 = np.max(f1_scores)
     precision_at_threshold = precision_score(y_test, y_pred > best_threshold)
     recall_at_threshold = recall_score(y_test, y_pred > best_threshold)
-    return best_threshold, best_f1, precision_at_threshold, recall_at_threshold
+    return best_threshold, best_f1, precision_at_threshold, recall_at_threshold, auc_recall_precision
 
 
 def rrf(targetyear: int, test_years: list, outname: str, n_pk: int, phase4: bool):
@@ -90,15 +90,18 @@ def rrf(targetyear: int, test_years: list, outname: str, n_pk: int, phase4: bool
     font = {'family': 'normal', 'size': 18}
     matplotlib.rc('font', **font)
     pr_data = []
+    # We use max_ap to figure out the best place to put the legend in the PR plot
+    max_ap = 0
     for (begin_y, end_y) in test_years:
         print(".", end='')
         y_pred, y_test, yproba, n_pos_train, n_neg_train, n_pos_test, n_neg_test = krf.classify(begin_year=begin_y,
                                                                                                 end_year=end_y,
                                                                                                 phase4=phase4)
         auc_roc = plot_one_auc_curve(ax1, y_test, yproba, begin_y, end_y, n_pos_test)
-        thresh, fscore, precision_at_threshold, recall_at_threshold = plot_one_precision_recall_curve(ax2, y_test,
+        thresh, fscore, precision_at_threshold, recall_at_threshold, auc_pr = plot_one_precision_recall_curve(ax2, y_test,
                                                                                                       yproba, begin_y,
                                                                                                       end_y, n_pos_test)
+        max_ap = max(max_ap, auc_pr)
         if phase4:
             phase = 'phase4'
         else:
@@ -111,6 +114,7 @@ def rrf(targetyear: int, test_years: list, outname: str, n_pk: int, phase4: bool
                         "AUROC": auc_roc,
                         "threshold": thresh,
                         "f-score": fscore,
+                        "average_precision": auc_pr,
                         "precision@threshold": precision_at_threshold,
                         "recall@threshold": recall_at_threshold,
                         "n_pos_train": n_pos_train,
@@ -125,7 +129,10 @@ def rrf(targetyear: int, test_years: list, outname: str, n_pk: int, phase4: bool
     ax1.yaxis.set_tick_params(width=3)
     ax2.set_xlabel('Recall')
     ax2.set_ylabel('Precision')
-    ax2.legend(loc="lower left")
+    if max_ap > 0.5:
+        ax2.legend(loc="lower left")
+    else:
+        ax2.legend(loc="upper right")
     fig.savefig(outname, format='PDF')
     plt.clf()
     return pr_data
