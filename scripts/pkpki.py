@@ -12,7 +12,9 @@ from kcet import PkPkiFilter
 parser = argparse.ArgumentParser(description='Process PKI/PK data')
 parser.add_argument('--max_multiplicity', type=int, default=5)
 parser.add_argument('--outfilename',  type=str, default='drug_kinase_links.tsv')
-args = parser.parse_args(sys.argv[2:])
+args = parser.parse_args()
 
+n_pk_pki = args.max_multiplicity
+outfilename = "drug_kinase_links_n_pk_{}.tsv".format(n_pk_pki)
 pkpki = PkPkiFilter()
-pkpki.output_to_file(outfilename=args.outfilename, n_pki_limit=args.max_multiplicity)
+pkpki.output_to_file(outfilename=outfilename, n_pki_limit=n_pk_pki)
