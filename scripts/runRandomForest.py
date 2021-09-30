@@ -141,7 +141,7 @@ def rrf(targetyear: int, test_years: list, outname: str, n_pk: int, phase4: bool
 def run_rrf2010():
     year = 2010
     prediction_years_by2 = [(2011, 2012), (2013, 2014), (2015, 2016), (2017, 2018), (2019, 2020)]
-    prediction_AY = [(2011, 2011), (2011, 2012), (2011, 2014), (2011, 2016), (2011, 2018), (2011, 2020)]
+    prediction_AY = [(2011, 2011), (2011, 2014), (2011, 2017), (2011, 2020)]
     pr_data = []
     for npk in [1, 2, 5, 10]:
         outname = "m{}_{}_by_two_allphases.pdf".format(npk, year)
@@ -162,7 +162,7 @@ def run_rrf2010():
 def run_rrf2014():
     year = 2014
     prediction_by2 = [(2015, 2016), (2017, 2018), (2019, 2020)]
-    prediction_AY = [(2015, 2015), (2015, 2016), (2015, 2018), (2015, 2020)]
+    prediction_AY = [(2015, 2015), (2015, 2017), (2015, 2020)]
     pr_data = []
     for npk in [1, 2, 5, 10]:
         outname = "m{}_{}_by_two_allphases.pdf".format(npk, year)

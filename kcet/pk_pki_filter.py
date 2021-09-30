@@ -161,6 +161,24 @@ class PkPkiFilter:
         logging.info("Extracted %d PKI<->PK interactions", len(valid_pk_pki))
         return pd.DataFrame(valid_pk_pki)
 
+    def get_all_pk_pki(self):
+        """
+        For the novel predictions, we do not want to filter the PK/PKI links from drug central since we
+        are interested in finding things that are not previously investigated, whether the affinity is
+        within the n_pki_limit used for training/historical validation or not
+        """
+        pk_pki_list = []
+        for pk_pki in self._pk_pki_list:
+            if pk_pki.act_value is None:
+                actval = 'n/a'
+            else:
+                actval = str(pk_pki.act_value)
+            d = {'PKI': pk_pki.pki, 'PK': pk_pki.pk, 'ACT_VALUE': actval, 'PMID': pk_pki.pmid}
+            pk_pki_list.append(d)
+        logging.info("Extracted %d PKI<->PK interactions", len(pk_pki_list))
+        return pd.DataFrame(pk_pki_list)
+
+
     def output_to_file(self, outfilename:str,  n_pki_limit: int = 5, threshold: float = 0.03):
         valid_pk_pki = self.get_valid_pk_pki(n_pki_limit=n_pki_limit, threshold=threshold)
         valid_pk_pki.to_csv(outfilename, sep='\t', index=False)

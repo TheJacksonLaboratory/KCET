@@ -1,12 +1,12 @@
 import random
 
-from .kcet_parser import KcetParser
+from .kcet_parser import KcetParser, PkPkiFilter
 from .ct_by_phase_parser import CTParserByPhase
 
 import pandas as pd
 import numpy as np
 import datetime
-from typing import Set, Tuple
+from typing import Set, Tuple, List
 import os
 import logging
 
@@ -235,6 +235,7 @@ class KcetDatasetGenerator:
         Get all of the positive examples from begin_year to end_year (inclusive).
         -- used for test in historical experiments
         """
+
         if phase4:
             within_valid_year_range = (self._df_phase4['year'] >= begin_year) & (self._df_phase4['year'] <= end_year)
             df_pos_test = self._df_phase4[within_valid_year_range]
@@ -242,7 +243,15 @@ class KcetDatasetGenerator:
             within_valid_year_range = (self._df_allphases['year'] >= begin_year) & (
                     self._df_allphases['year'] <= end_year)
             df_pos_test = self._df_allphases[within_valid_year_range]
-        positive_test_links = Link.fromDataFrameToLinkSet(df_pos_test)
+        all_positive_links_up_to_target = self.get_all_phases_all_pk_pki(target_year=target_year)
+        positive_test_links = set()
+        for _, row in df_pos_test.iterrows():
+            cancer = row['mesh_id']
+            pk = row['gene_id']
+            candidate = Link(cancer=cancer, kinase=pk)
+            if candidate not in all_positive_links_up_to_target:
+                positive_test_links.add(candidate)
+        #positive_test_links = Link.fromDataFrameToLinkSet(df_pos_test)
         # Ground-truth training data is up to the target year only!
         all_phases_positive_links = Link.fromDataFrameToLinkSet(
             self._df_allphases[self._df_allphases['year'] <= target_year])
@@ -322,31 +331,55 @@ class KcetDatasetGenerator:
             len(negative_links), len(positive_links)))
         return df
 
-    def get_data_for_novel_prediction(self, current_year: int, factor: int = 10) -> Tuple[
-            pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+
+    def get_all_phases_all_pk_pki(self, target_year:int):
+        """
+        It is a conservative estimate to assume that all connections between a PK and PK are valid for the testing set
+        In contrast, for training, we use only validated items (phase 4)
+        This method returns a data frame with cancer/PK links that are derived from all studies up to the target year,
+        and all PK/PKI links (i.e., not limited to the n_pk_pki parameter that is used for the training set)
+        """
+        pkpki = PkPkiFilter()
+        all_pk_pki_df = pkpki.get_all_pk_pki()
+        all_links = set()
+        all_phases = self._df_allphases[self._df_allphases['year']<=target_year]
+        for _, row in all_phases.iterrows():
+            kinase = row['gene_id']
+            cancer = row['mesh_id']
+            pk_pki = all_pk_pki_df[all_pk_pki_df['PK'] == kinase]
+            for idx, item in pk_pki.iterrows():
+                pk = item['PK']
+                link = Link(cancer=cancer, kinase= pk)
+                all_links.add(link)
+        return all_links
+
+
+
+    def get_data_for_novel_prediction(self, target_year: int, factor: int = 10) -> Tuple[
+        pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         This method creates positive and negative training sets including everything up to the current year
         It then creates examples for all other predictions that we will use for the novel predictions
         It returns three dataframes with embeddings.
         """
-        if current_year != get_current_year():
-            raise Exception("For novel prediction, year must be the current year! ")
-        positive_training_df = self.get_pos_training_embeddings(target_year=current_year)
+        positive_training_df = self.get_pos_training_embeddings(target_year=target_year)
         n_neg = factor * len(positive_training_df)
-        negative_training_df = self.get_neg_training_embeddings(target_year=current_year, n_neg_examples=n_neg)
+        negative_training_df = self.get_neg_training_embeddings(target_year=target_year, n_neg_examples=n_neg)
         prediction_df = pd.DataFrame(columns=self._embeddings_df.columns)
         kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
         i = 0
         total = len(kinase_list) * len(cancer_id_list)
         print("Links to be extracted: {}".format(total))
-        positive_links = Link.fromEmbeddingsToLinkSet(positive_training_df)
+        # We remove all positive protein-kinase/cancer associations regardless of phase
+        positive_links = self.get_all_phases_all_pk_pki(target_year=target_year)
+        #Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= target_year])
         negative_links = Link.fromEmbeddingsToLinkSet(negative_training_df)
         for ncbigene_id in kinase_list:
             for mesh_id in cancer_id_list:
                 i += 1
                 if i % 2000 == 0:
-                    print("\r{}/{} links extracted ({:.2f}%)".format(i, total, 100*i/total), end="")
+                    print("\r{}/{} links extracted ({:.2f}%)".format(i, total, 100 * i / total), end="")
                 randomLink = Link(kinase=ncbigene_id, cancer=mesh_id)
                 if randomLink in positive_links or randomLink in negative_links:
                     continue
@@ -380,12 +413,10 @@ class KcetDatasetGenerator:
         """
         unidentified_genes = set()
         unidentified_cancers = set()
-        if not "gene_id" in examples.columns:
+        if "gene_id" not in examples.columns:
             raise ValueError("Input dataframe must contain a column called gene_id")
-        if not "mesh_id" in examples.columns:
+        if "mesh_id" not in examples.columns:
             raise ValueError("Input dataframe must contain a column called mesh_id")
-        # if len(examples.columns) != 2:
-        #    raise ValueError("Input dataframe must have exactly two columns")
         df = pd.DataFrame(columns=self._embeddings_df.columns)
         total = len(examples.index)
         if total == 0:
@@ -406,8 +437,6 @@ class KcetDatasetGenerator:
                 unidentified_cancers.add(mesh_id)
             if ncbigene_id_embedding is not None and mesh_id_embedding is not None:
                 diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
-                # diff_kinase_mesh_list_pos_train.append(diff_kinase_mesh)
-                # diff_index_pos_train.append(ncbigene_id + "," + mesh_id)
                 label = "%s-%s" % (ncbigene_id, mesh_id)
                 df.loc[label] = diff_kinase_mesh
             i += 1
