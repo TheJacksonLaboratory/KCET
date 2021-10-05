@@ -251,17 +251,12 @@ class KcetDatasetGenerator:
             candidate = Link(cancer=cancer, kinase=pk)
             if candidate not in all_positive_links_up_to_target:
                 positive_test_links.add(candidate)
-        #positive_test_links = Link.fromDataFrameToLinkSet(df_pos_test)
-        # Ground-truth training data is up to the target year only!
-        all_phases_positive_links = Link.fromDataFrameToLinkSet(
-            self._df_allphases[self._df_allphases['year'] <= target_year])
-
         kinase_list = []
         cancer_list = []
         n_skipped_link = 0
         df = pd.DataFrame(columns=self._embeddings_df.columns)
         for link in positive_test_links:
-            if link in all_phases_positive_links:
+            if link in all_positive_links_up_to_target:
                 # do not include a positive example if it was already known at training time!
                 n_skipped_link += 1
                 continue
@@ -341,15 +336,17 @@ class KcetDatasetGenerator:
         """
         pkpki = PkPkiFilter()
         all_pk_pki_df = pkpki.get_all_pk_pki()
+        # all_pk_pki_df has rows like this - PKI:abemaciclib; PK: CDK4, ACT_VALUE:0.0000599..., PMID:24919854
         all_links = set()
         all_phases = self._df_allphases[self._df_allphases['year']<=target_year]
         for _, row in all_phases.iterrows():
-            kinase = row['gene_id']
+            kinase = row['kinase'] # e.g., CDK4
+            gene_id = row['gene_id']
             cancer = row['mesh_id']
             pk_pki = all_pk_pki_df[all_pk_pki_df['PK'] == kinase]
             for idx, item in pk_pki.iterrows():
                 pk = item['PK']
-                link = Link(cancer=cancer, kinase= pk)
+                link = Link(cancer=cancer, kinase=gene_id)
                 all_links.add(link)
         return all_links
 
@@ -373,7 +370,6 @@ class KcetDatasetGenerator:
         print("Links to be extracted: {}".format(total))
         # We remove all positive protein-kinase/cancer associations regardless of phase
         positive_links = self.get_all_phases_all_pk_pki(target_year=target_year)
-        #Link.fromDataFrameToLinkSet(self._df_allphases[self._df_allphases['year'] <= target_year])
         negative_links = Link.fromEmbeddingsToLinkSet(negative_training_df)
         for ncbigene_id in kinase_list:
             for mesh_id in cancer_id_list:

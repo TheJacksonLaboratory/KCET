@@ -8,7 +8,7 @@ from .pk_pki_filter import PkPkiFilter
 
 __all__  = [
     "CTParserByPhase",
-    "KinasePredictor",
+    "KcetDatasetGenerator",
     "KcetParser",
     "KcetRandomForest",
     "PkPkiFilter",
