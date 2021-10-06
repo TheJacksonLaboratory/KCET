@@ -1,6 +1,6 @@
 import random
 
-from .kcet_parser import KcetParser, PkPkiFilter
+from .kcet_parser import KcetParser, DrugCentralPkPkiParser
 from .ct_by_phase_parser import CTParserByPhase
 
 import pandas as pd
@@ -102,9 +102,9 @@ class KcetDatasetGenerator:
 
     def __init__(self, clinical_trials: str, embeddings: str, words: str, n_pk: int = 5) -> None:
         kcetParser = KcetParser()
-        self._pki_to_kinase_df = kcetParser._get_pki_to_kinase_list_dict_max_pk(n_pk=n_pk)
-        if not isinstance(self._pki_to_kinase_df, pd.DataFrame):
-            raise ValueError("_pki_to_kinase_dict needs to be a DataFrame")
+        #self._pki_to_kinase_df = kcetParser._get_pki_to_kinase_list_dict_max_pk(n_pk=n_pk)
+        #if not isinstance(self._pki_to_kinase_df, pd.DataFrame):
+        #    raise ValueError("_pki_to_kinase_dict needs to be a DataFrame")
         self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()
         self._mesh_list = kcetParser.get_mesh_id_list()
         parser = CTParserByPhase(clinical_trials=clinical_trials)
@@ -350,7 +350,7 @@ class KcetDatasetGenerator:
         This method returns a data frame with cancer/PK links that are derived from all studies up to the target year,
         and all PK/PKI links (i.e., not limited to the n_pk_pki parameter that is used for the training set)
         """
-        pkpki = PkPkiFilter()
+        pkpki = DrugCentralPkPkiParser()
         all_pk_pki_df = pkpki.get_all_pk_pki()
         # all_pk_pki_df has rows like this - PKI:abemaciclib; PK: CDK4, ACT_VALUE:0.0000599..., PMID:24919854
         all_links = set()

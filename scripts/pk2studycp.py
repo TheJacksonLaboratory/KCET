@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath('..'))
 # protein kinase (PK) to study cross product (pk2studycp.py)
 # extract a list of all indications tested for protein kinase inhibitors with activity against a specific PK
 
-from kcet import PkPkiFilter, CTParserByPhase, KcetDatasetGenerator
+from kcet import DrugCentralPkPkiParser, CTParserByPhase, KcetDatasetGenerator
 
 parser = argparse.ArgumentParser(description='Process PKI/PK data')
 parser.add_argument('--pk', type=str, default='FLT3')
@@ -21,7 +21,7 @@ the_ctfile = args.clinicaltrials
 
 print("Extracting all indications tested for protein kinase inhibitors with activity against {}".format(the_pk))
 
-pkpki = PkPkiFilter()
+pkpki = DrugCentralPkPkiParser()
 all_pki = set()
 
 for _, row in pkpki.get_all_pk_pki().iterrows():

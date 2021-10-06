@@ -3,7 +3,7 @@ from .kcet_parser import KcetParser
 from .kcet_dataset_generator import KcetDatasetGenerator
 from .kcet_random_forest import KcetRandomForest
 from .wordvec2cosine import Wordvec2Cosine
-from .pk_pki_filter import PkPkiFilter
+from .drugcentral_pk_pki_parser import DrugCentralPkPkiParser
 
 
 __all__  = [
@@ -11,6 +11,6 @@ __all__  = [
     "KcetDatasetGenerator",
     "KcetParser",
     "KcetRandomForest",
-    "PkPkiFilter",
+    "DrugCentralPkPkiParser",
     "Wordvec2Cosine"
 ]

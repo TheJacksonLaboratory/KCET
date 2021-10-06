@@ -70,7 +70,7 @@ class KinaseInhibitor:
         self._cancerdict = defaultdict(Cancer)
 
     def add_study(self, cancer:str, mesh_id:str, nct:str, phase:str, year:int) -> None:
-        if not mesh_id in self._cancerdict:
+        if mesh_id not in self._cancerdict:
             c = Cancer(name=cancer, mesh_id=mesh_id)
             self._cancerdict[mesh_id] = c
         c = self._cancerdict.get(mesh_id)
