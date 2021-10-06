@@ -46,7 +46,11 @@ class Link:
         return {'mesh_id': self._cancer, 'gene_id': self._kinase}
 
     def __str__(self):
-        return self._cancer + "-" + self._kinase
+        return Link.getLinkKey(cancer_mesh_id=self._cancer, kinase_ncbi_gene_id=self._kinase)
+
+    @staticmethod
+    def getLinkKey(cancer_mesh_id: str, kinase_ncbi_gene_id: str) -> str:
+        return kinase_ncbi_gene_id + "-" + cancer_mesh_id
 
     @staticmethod
     def fromDataFrameToLinkSet(df: pd.DataFrame) -> Set:
@@ -67,6 +71,11 @@ class Link:
         for i, row in df.iterrows():
             # i (the index) is like this ncbigene7010-meshd018195
             k, c = i.split("-")
+            if not k.startswith('ncbigene'):
+                raise ValueError("Malformed word line, we were expecting the first element to be ncbigene but got {}",
+                                 i)
+            if not c.startswith('meshd'):
+                raise ValueError("Malformed word line, we were expecting the second element to be meshd but got {}", i)
             L = Link(kinase=k, cancer=c)
             linkset.add(L)
         return linkset
@@ -280,7 +289,7 @@ class KcetDatasetGenerator:
                 mesh_id_embedding = self._embeddings_df.loc[mesh_id]
             if ncbigene_id_embedding is not None and mesh_id_embedding is not None:
                 diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
-                label = "%s-%s" % (ncbigene_id, mesh_id)
+                label = Link.getLinkKey(cancer_mesh_id=mesh_id, kinase_ncbi_gene_id=ncbigene_id)
                 df.loc[label] = diff_kinase_mesh
         logger.info(
             "Skipped %d links for testing that were already present in training data (expected behavior)" % n_skipped_link)
@@ -326,7 +335,7 @@ class KcetDatasetGenerator:
                 mesh_id_embedding = self._embeddings_df.loc[mesh_id]
             if ncbigene_id_embedding is not None and mesh_id_embedding is not None:
                 diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
-                label = "%s-%s" % (ncbigene_id, mesh_id)
+                label = Link.getLinkKey(cancer_mesh_id=mesh_id, kinase_ncbi_gene_id=ncbigene_id)
                 df.loc[label] = diff_kinase_mesh
 
         logger.info("Skipped %d links that were found previously (expected behavior)" % n_skipped_link)
@@ -348,13 +357,15 @@ class KcetDatasetGenerator:
         all_phases = self._df_allphases[self._df_allphases['year'] <= target_year]
         for _, row in all_phases.iterrows():
             kinase = row['kinase']  # e.g., CDK4
-            gene_id = row['gene_id']
-            cancer = row['mesh_id']
+            gene_id = row['gene_id']  # e.g., NCBI Gene id corresponding to CDK4
+            cancer = row['mesh_id']  # e.g., MeSH ID of a cancer that can be treated with a PKI that targets CDK4
             pk_pki = all_pk_pki_df[all_pk_pki_df['PK'] == kinase]
             for idx, item in pk_pki.iterrows():
                 pk = item['PK']
                 link = Link(cancer=cancer, kinase=gene_id)
                 all_links.add(link)
+        if len(all_links) == 0:
+            raise ValueError("TO DO COULD NOT FIND ALL LINKS")
         return all_links
 
     def get_data_for_novel_prediction(self, target_year: int, factor: int = 10) -> Tuple[

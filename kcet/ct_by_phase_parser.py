@@ -10,7 +10,11 @@ import copy
 from typing import List, Dict
 import logging
 
-logging.basicConfig(filename='kcet.log', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                    datefmt='%Y-%m-%d:%H:%M:%S',
+                    filename='kcet.log',
+                    level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class Entry:
@@ -34,10 +38,8 @@ class Entry:
         self._pmid = fields[3]
 
     def __eq__(self, other):
-        if isinstance(other, Entry):
-            return ((self._pki == other._pki) and (self._pk == other._pk) and (self._pmid == other._pmid))
-        else:
-            return False
+        return isinstance(other,
+                          Entry) and self._pki == other._pki and self._pk == other._pk and self._pmid == other._pmid
 
     def __hash__(self):
         return hash((self._pki, self._pk, self._act_value, self._pmid))
@@ -53,12 +55,13 @@ class Entry:
 
 class CTParserByPhase:
     """
-    A parser for the clinical_trials_data file that is produced by yactp.  (https://github.com/monarch-initiative/yactp).
+    A parser for the clinical_trials_data file that is produced by yactp.
+    (https://github.com/monarch-initiative/yactp).
+
     """
 
     def __init__(self,
-                 clinical_trials: str,
-                 year: int = None):
+                 clinical_trials: str):
         """
         :param clinical_trials_data_path: This is the output file from yactp.  (https://github.com/monarch-initiative/yactp).
         :param year: The target year for analysis -- take all data up to this year
@@ -66,29 +69,21 @@ class CTParserByPhase:
         before that year.
         """
         dir_path = os.path.dirname(os.path.realpath(__file__))  # directory of current file
-        basepath = Path(dir_path).parent  # parent directory -- the base of the project
-        self.prot_kinase_path = os.path.join(basepath, 'input',
-                                             'prot_kinase.tsv')  # file consisting of protein kinases their gene symbols, ncbi gene ids and ensembl gene ids
+        base_path = Path(dir_path).parent  # parent directory -- the base of the project
+        # file consisting of protein kinases their gene symbols, ncbi gene ids and ensembl gene ids
+        self.prot_kinase_path = os.path.join(base_path, 'input', 'prot_kinase.tsv')
         self.gene_symbol_to_ncbigene_map = self._parse_prot_kinase()  # map gene symbols to their ncbi gene ids
         self._clinical_trials_data_path = clinical_trials
         if not os.path.isfile(self._clinical_trials_data_path):
             raise FileNotFoundError("Could not find %s" % self._clinical_trials_data_path)
-        self.drug_kinase_links_data_path = os.path.join(basepath, 'input', 'drug_kinase_links.tsv')
-        if year is None:
-            now = datetime.datetime.now()  # default to current year
-            self._year = now.year
-        else:
-            self._year = year
+        self.drug_kinase_links_data_path = os.path.join(base_path, 'input', 'drug_kinase_links.tsv')
         self._genesymbol_to_id_map = None
         self._drug_kinase_links = None
         self.all_phases_df = None
-        self._validation_pki_dict = None  # List of PKI<->disease AFTER target year (can be empty if target year is now)
         self._pki_dict = None  # List of PKI<->disease UP TO target year
         ## Ingest data
         self._ingest_kinase_cancer_links()
-        targeted_set, targeted_set_phase_4 = self._ingest_targeted_kinase_set(clinical_trials)
-        self._targeted = sorted(list(targeted_set))
-        self._targeted_phase_4 = sorted(list(targeted_set_phase_4))
+
 
     def _parse_prot_kinase(self) -> Dict:
         """
@@ -159,35 +154,28 @@ class CTParserByPhase:
     def _ingest_kinase_cancer_links(self) -> None:
         """
         We first use the clinical_trials_by_phase.tsv to extract disease-drug information for a specific phase,
-         e.g. Phase 1 before a specific date (year). The phase and date are specified by the user.
-         Then, we use the drug_kinase_links.tsv to obtain drug-kinase links and finally we generate disease_kinase links.
+        e.g. Phase 1 before a specific date (year). The phase and date are specified by the user.
+        Then, we use the drug_kinase_links.tsv to obtain drug-kinase links and finally we generate disease_kinase links.
         """
+        # _genesymbol_to_id map has entries like {CDK20:ncbigene23552}
         self._genesymbol_to_id_map = self._parse_prot_kinase()
+        # _drug_kinase_links has entries like {abemaciclib:[CDK4,CDK6]}
         self._drug_kinase_links = self._parse_kinase_inhibitor_to_kinase_file()
         trials = self._get_ct_by_phase()
         # sanity check-make a set of the medications
         medications = {t.drug for t in trials}
         logging.info("Parsed data for %d medications." % len(medications))
         pki_dict = defaultdict(KinaseInhibitor)
-        validation_pki_dict = defaultdict(KinaseInhibitor)
         for t in trials:
             med = t.drug
-            if t.start_date <= self._year:
-                if not med in pki_dict:
-                    ki = KinaseInhibitor(name=med)
-                    pki_dict[med] = ki
-                ki = pki_dict.get(med)
-                ki.add_study(cancer=t.disease, mesh_id=t.mesh_id, nct=t.nct_id, year=t.start_date, phase=t.phase)
-            else:
-                if not med in validation_pki_dict:
-                    ki = KinaseInhibitor(name=med)
-                    validation_pki_dict[med] = ki
-                ki = validation_pki_dict.get(med)
-                ki.add_study(cancer=t.disease, mesh_id=t.mesh_id, nct=t.nct_id, year=t.start_date, phase=t.phase)
+            if med not in pki_dict:
+                ki = KinaseInhibitor(name=med)
+                pki_dict[med] = ki
+            ki = pki_dict.get(med)
+            ki.add_study(cancer=t.disease, mesh_id=t.mesh_id, nct=t.nct_id, year=t.start_date, phase=t.phase)
         self._pki_dict = pki_dict
-        self._validation_pki_dict = validation_pki_dict
 
-    def _get_data_frame(self, dict_list: List, removeRedundantEntries: bool = False):
+    def _get_data_frame(self, dict_list: List, remove_redundant_entries: bool = False):
         """
         Return a pandas dataframe with data for all trials and all phases
         Constructs the dataframe from a list of dictionaries
@@ -210,7 +198,7 @@ class CTParserByPhase:
                 extended_d['kinase'] = kinase
                 extended_d['gene_id'] = gene_id
                 extended_dict_list.append(extended_d)
-        if removeRedundantEntries:
+        if remove_redundant_entries:
             unique_list = []
             seen_entries = set()
             for entry in extended_dict_list:
@@ -233,7 +221,7 @@ class CTParserByPhase:
         dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
         for _, v in self._pki_dict.items():
             dict_list.extend(v.get_data_frame_all_phases())
-        df = self._get_data_frame(dict_list=dict_list, removeRedundantEntries=removeRedundantEntries)
+        df = self._get_data_frame(dict_list=dict_list, remove_redundant_entries=removeRedundantEntries)
         return df
 
     def get_phase_4(self, removeRedundantEntries: bool = False):
@@ -243,88 +231,9 @@ class CTParserByPhase:
         dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
         for _, v in self._pki_dict.items():
             dict_list.extend(v.get_data_frame_phase_4())
-        return self._get_data_frame(dict_list=dict_list, removeRedundantEntries=removeRedundantEntries)
+        return self._get_data_frame(dict_list=dict_list, remove_redundant_entries=removeRedundantEntries)
 
     def get_year(self):
         return self._year
 
-    def get_all_phases_for_training(self):
-        df = self.get_all_phases()
-        df_tr = df[['gene_id', 'mesh_id']].copy()
-        df_tr.drop_duplicates(inplace=True)
-        return df_tr
 
-    def get_phase_4_for_training(self):
-        df = self.get_phase_4()
-        df_tr = df[['gene_id', 'mesh_id']].copy()
-        df_tr.drop_duplicates(inplace=True)
-        return df_tr
-
-    def get_validation_all_phases(self):
-        """
-        Get all clinical studies from years after the target year.
-        If the target year is now -- throw an error
-        """
-        if self._year == datetime.datetime.now().year:
-            raise ValueError(
-                "Cannot get studies from the future! This function can only be used for historical comparisons")
-        dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
-        for _, v in self._validation_pki_dict.items():
-            dict_list.extend(v.get_data_frame_all_phases())
-        return self._get_data_frame(dict_list=dict_list)
-
-    def get_validation_phase_4(self):
-        """
-        Get all clinical studies from years after the target year.
-        If the target year is now -- throw an error
-        """
-        if self._year == datetime.datetime.now().year:
-            raise ValueError(
-                "Cannot get studies from the future! This function can only be used for historical comparisons")
-        dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
-        for _, v in self._validation_pki_dict.items():
-            dict_list.extend(v.get_data_frame_phase_4())
-        return self._get_data_frame(dict_list=dict_list)
-
-    def _ingest_targeted_kinase_set(self, path):
-        """
-        path -- path to the clinical_trials_by_phase file from yactp
-        This function creates two maps -- one with the earliest date by which 
-        a 
-        """
-        # df_all is a Pandas dataframe with all clinical trials
-        df_all = self.get_all_phases()
-        # not_later_than_target_year = df_all['year']<=self._year
-        # df_all_not_later = df_all[not_later_than_target_year]
-        targeted_set = set(df_all['kinase'])
-        ## Now restrict the targets to phase 4
-        is_phase_4 = df_all['phase'] == 'Phase 4'
-        df_all_not_later_phase_4 = df_all[is_phase_4]
-        targeted_set_phase_4 = set(df_all_not_later_phase_4['kinase'])
-        return targeted_set, targeted_set_phase_4
-
-    def get_targeted_kinases_with_gene_id(self):
-        dict_list = []
-        for kinase in self._targeted:
-            gene_id = self._genesymbol_to_id_map.get(kinase, "n/a")
-            d = {'kinase': kinase, "gene_id": gene_id}
-            dict_list.append(d)
-        return pd.DataFrame(dict_list)
-
-    def get_untargeted_kinases_with_gene_id(self):
-        dict_list = []
-        targeted_set = set(self._targeted)
-        for kinase, gene_id in self._genesymbol_to_id_map.items():
-            if kinase in targeted_set:
-                continue
-            d = {'kinase': kinase, "gene_id": gene_id}
-            dict_list.append(d)
-        return pd.DataFrame(dict_list)
-
-    def get_targeted_kinases_with_gene_id_phase_4(self):
-        dict_list = []
-        for kinase in self._targeted_phase_4:
-            gene_id = self._genesymbol_to_id_map.get(kinase, "n/a")
-            d = {'kinase': kinase, "gene_id": gene_id}
-            dict_list.append(d)
-        return pd.DataFrame(dict_list)
