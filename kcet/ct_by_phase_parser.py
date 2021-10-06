@@ -76,10 +76,13 @@ class CTParserByPhase:
         self.drug_kinase_links_data_path = os.path.join(base_path, 'input', 'drug_kinase_links.tsv')
         # _genesymbol_to_id map has entries like {CDK20:ncbigene23552}
         self._genesymbol_to_id_map = self._parse_prot_kinase()
-        # _drug_kinase_links has entries like {abemaciclib:[CDK4,CDK6]}
-        #self._drug_kinase_links = self._parse_kinase_inhibitor_to_kinase_file()
+
         self.all_phases_df = None
         drug_central_parser = DrugCentralPkPkiParser()
+        # both of the following variables have entries like {abemaciclib:[CDK4,CDK6]}
+        # the thresholded version is used for training.
+        # the 'all links' version has all links from DrugCentral, regardless of threshold -- we do not want
+        # to test against this because it would not be fair.
         self._thresholded_pk_pki_links = drug_central_parser.get_pk_pki_with_threshold(n_pki_limit=n_pk)
         self._all_pk_pki_links = drug_central_parser.get_all_pk_pki()
         self._ingest_kinase_cancer_links()

@@ -157,7 +157,7 @@ class DrugCentralPkPkiParser:
             if len(v) > n_pki_limit:
                 logger.warning("Adjusting threshold for PKI {} because it inhibits too many PKs ({})".format(k, len(v)))
                 v = self._get_max_affinity_links(pk_pki=v, n_pki_limit=n_pki_limit)
-            thresholded_pk_pki[k] = v
+            thresholded_pk_pki[k] = [item.pk for item in v]
             logger.info("PKI: %s, number of inhibited PKs %d", k, len(v))
         logger.info("Extracted %d PKI<->PK interactions", len(valid_pk_pki))
         return thresholded_pk_pki
@@ -172,7 +172,7 @@ class DrugCentralPkPkiParser:
         valid_pki_dict = defaultdict(list)
         for pk_pki in self._pk_pki_list:
             if pk_pki.is_valid_or_not_provided(act_threshold=threshold):
-                valid_pki_dict[pk_pki.pki].append(pk_pki)
+                valid_pki_dict[pk_pki.pki].append(pk_pki.pk)
         return valid_pki_dict
 
     def output_to_file(self, outfilename: str, n_pki_limit: int = 5, threshold: float = 0.03):

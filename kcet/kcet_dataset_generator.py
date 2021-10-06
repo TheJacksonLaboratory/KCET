@@ -350,20 +350,13 @@ class KcetDatasetGenerator:
         This method returns a data frame with cancer/PK links that are derived from all studies up to the target year,
         and all PK/PKI links (i.e., not limited to the n_pk_pki parameter that is used for the training set)
         """
-        pkpki = DrugCentralPkPkiParser()
-        all_pk_pki_df = pkpki.get_all_pk_pki()
-        # all_pk_pki_df has rows like this - PKI:abemaciclib; PK: CDK4, ACT_VALUE:0.0000599..., PMID:24919854
         all_links = set()
         all_phases = self._df_allphases[self._df_allphases['year'] <= target_year]
         for _, row in all_phases.iterrows():
-            kinase = row['kinase']  # e.g., CDK4
-            gene_id = row['gene_id']  # e.g., NCBI Gene id corresponding to CDK4
-            cancer = row['mesh_id']  # e.g., MeSH ID of a cancer that can be treated with a PKI that targets CDK4
-            pk_pki = all_pk_pki_df[all_pk_pki_df['PK'] == kinase]
-            for idx, item in pk_pki.iterrows():
-                pk = item['PK']
-                link = Link(cancer=cancer, kinase=gene_id)
-                all_links.add(link)
+            kinase_gene_id = row['gene_id']  # e.g., NCBI Gene id corresponding to CDK4
+            cancer_mesh_id = row['mesh_id']  # e.g., MeSH ID of a cancer that can be treated with a PKI that targets CDK4
+            link = Link(cancer=cancer_mesh_id, kinase=kinase_gene_id)
+            all_links.add(link)
         if len(all_links) == 0:
             raise ValueError("TO DO COULD NOT FIND ALL LINKS")
         return all_links
@@ -466,15 +459,15 @@ class KcetDatasetGenerator:
         for display in a Jupyter notebook etc.
         """
         data = []
-        n_pki = len(self._pki_to_kinase_df)
-        data.append(['Above threshold PKI/PKI links', "{:d}".format(n_pki)])
-        df = self._pki_to_kinase_df.groupby("PKI")["PK"].count()
-        mean_pk_per_pki = np.mean(df)
-        data.append(['mean PKs per PKI (DrugCentral dataset)', "{:.2f}".format(mean_pk_per_pki)])
-        n_unique_kinases = len(pd.unique(self._pki_to_kinase_df['PK']))
-        data.append(['protein kinases in DrugCentral dataset', "{:d}".format(n_unique_kinases)])
-        n_unique_PKIs = len(pd.unique(self._pki_to_kinase_df['PKI']))
-        data.append(['protein kinase inhibitors in DrugCentral dataset', "{:d}".format(n_unique_PKIs)])
+        #n_pki = len(self.)
+        #data.append(['Above threshold PKI/PKI links', "{:d}".format(n_pki)])
+        #df = self._pki_to_kinase_df.groupby("PKI")["PK"].count()
+        #mean_pk_per_pki = np.mean(df)
+        #data.append(['mean PKs per PKI (DrugCentral dataset)', "{:.2f}".format(mean_pk_per_pki)])
+        #n_unique_kinases = len(pd.unique(self._pki_to_kinase_df['PK']))
+        #data.append(['protein kinases in DrugCentral dataset', "{:d}".format(n_unique_kinases)])
+        #n_unique_PKIs = len(pd.unique(self._pki_to_kinase_df['PKI']))
+        #data.append(['protein kinase inhibitors in DrugCentral dataset', "{:d}".format(n_unique_PKIs)])
         n_ncbi_kinases = len(self._symbol_to_id_map)
         data.append(['protein kinases in NCBI gene dataset', "{:d}".format(n_ncbi_kinases)])
         n_mesh = len(self._mesh_list)

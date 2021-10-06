@@ -21,25 +21,16 @@ the_ctfile = args.clinicaltrials
 
 print("Extracting all indications tested for protein kinase inhibitors with activity against {}".format(the_pk))
 
-pkpki = DrugCentralPkPkiParser()
-all_pki = set()
+parser = CTParserByPhase(clinical_trials=the_ctfile)
+df = parser.get_all_phases() # _drug_kinase_links has entries like {abemaciclib:[CDK4,CDK6]}()
 
-for _, row in pkpki.get_all_pk_pki().iterrows():
-    all_pki.add(row['PKI'])
+print("Total of {} PKIs".format(len(df)))
+print(df.head())
 
-print("Total of {} PKIs".format(len(all_pki)))
-
+df_for_kinase = df[df['kinase']==the_pk]
+cancers = df_for_kinase['cancer'].unique()
 disease_indications = set()
 
-with open(the_ctfile) as f:
-    reader = csv.DictReader(f, delimiter='\t')
-    for row in reader:
-        disease = row['disease']
-        drug = row['drug']
-        phase = row['phase']
-        if phase == 'Phase 4':
-            if drug in all_pki:
-                disease_indications.add(disease)
 
-for disease in sorted(list(disease_indications)):
-    print(disease)
+for idx, cancer in enumerate(sorted(cancers)):
+    print("{}) {}".format(idx, cancer))
