@@ -10,7 +10,11 @@ from typing import Set, Tuple, List
 import os
 import logging
 
-logging.basicConfig(filename='kcet.log', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                    datefmt='%Y-%m-%d:%H:%M:%S',
+                    filename='kcet.log',
+                    level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 class Link:
@@ -84,7 +88,7 @@ class KcetDatasetGenerator:
     In our case, we use historical data for training/test by extracting word/concept embedddings up to the target year (e.g., 2010)
     and use subsequent years for testing (e.g., data from after 2010).
     For some experiments, we restrict our analysis to phase 4 clinical trials. For others, we take all phases.
-    Functions such as get_training_and_test_data refer to all phases; get_training_and_test_data_phase4 is restricted to phase 4.
+    Functions such as get_training_and_test_embeddings refer to all phases; get_training_and_test_emebddings_phase4 is restricted to phase 4.
     """
 
     def __init__(self, clinical_trials: str, embeddings: str, words: str, n_pk: int = 5) -> None:
@@ -110,12 +114,12 @@ class KcetDatasetGenerator:
                 word = line[2:-3]
                 word_list.append(word)
         self._embeddings_df = pd.DataFrame(data=embedding, index=word_list)
-        logging.info(
+        logger.info(
             "We ingested %d labeled word vectors from %s and %s" % (len(self._embeddings_df), embeddings, words))
         self._ncbigene2symbol_map = kcetParser.get_id_to_symbol_map()
-        logging.info("We ingested %d symbol/NCBI gene id mappings" % (len(self._ncbigene2symbol_map)))
+        logger.info("We ingested %d symbol/NCBI gene id mappings" % (len(self._ncbigene2symbol_map)))
         self._meshid2disease_map = kcetParser.get_mesh_to_disease_map()
-        logging.info("We ingested %d meshId/disease mapping" % (len(self._meshid2disease_map)))
+        logger.info("We ingested %d meshId/disease mapping" % (len(self._meshid2disease_map)))
 
     def get_words(self):
         return self._embeddings_df.index
@@ -186,13 +190,13 @@ class KcetDatasetGenerator:
         return pos_train_vectors
 
     def get_neg_training_embeddings(self, target_year: int, n_neg_examples: int) -> pd.DataFrame:
-        '''
+        """
         get negative embeddings for training
         We do so by choosing from among embeddings that are not positive
-        n_neg_examples: number of embeddings to get (in general, this is 10 times the number of positive data for training)
-        We take Random non-links that were not listed in any of phase 1,2,3,4 in the year up 
+        n_neg_examples: number of embeddings to get (in general, 10 times the number of positive data for training)
+        We take Random non-links that were not listed in any of phase 1,2,3,4 in the year up
         to and including self._year
-        '''
+        """
         kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
         # The following help to keep track of positive examples
@@ -224,9 +228,9 @@ class KcetDatasetGenerator:
                 df.loc[label] = diff_kinase_mesh
             i += 1
             if i % 10000 == 0 and i > 0:
-                logging.info(
+                logger.info(
                     "Created %d/%d (%.1f%%) difference vectors" % (i, n_neg_examples, 100.0 * i / n_neg_examples))
-        logging.info("Extracted %s kinase-cancer difference vectors" % len(df))
+        logger.info("Extracted %s kinase-cancer difference vectors" % len(df))
         return df
 
     def get_positive_test_embeddings(self, target_year: int, begin_year: int, end_year: int,
@@ -245,12 +249,16 @@ class KcetDatasetGenerator:
             df_pos_test = self._df_allphases[within_valid_year_range]
         all_positive_links_up_to_target = self.get_all_phases_all_pk_pki(target_year=target_year)
         positive_test_links = set()
+        n_skipped = 0
         for _, row in df_pos_test.iterrows():
-            cancer = row['mesh_id']
-            pk = row['gene_id']
-            candidate = Link(cancer=cancer, kinase=pk)
+            cancer_mesh_id = row['mesh_id']
+            kinase_ncbi_gene_id = row['gene_id']
+            candidate = Link(cancer=cancer_mesh_id, kinase=kinase_ncbi_gene_id)
             if candidate not in all_positive_links_up_to_target:
                 positive_test_links.add(candidate)
+            else:
+                n_skipped += 1
+        logger.info("{} candidate PK/cancer pairs were skipped for the positive test set".format(n_skipped))
         kinase_list = []
         cancer_list = []
         n_skipped_link = 0
@@ -274,7 +282,7 @@ class KcetDatasetGenerator:
                 diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
                 label = "%s-%s" % (ncbigene_id, mesh_id)
                 df.loc[label] = diff_kinase_mesh
-        logging.info(
+        logger.info(
             "Skipped %d links for testing that were already present in training data (expected behavior)" % n_skipped_link)
         return df
 
@@ -321,13 +329,12 @@ class KcetDatasetGenerator:
                 label = "%s-%s" % (ncbigene_id, mesh_id)
                 df.loc[label] = diff_kinase_mesh
 
-        logging.info("Skipped %d links that were found previously (expected behavior)" % n_skipped_link)
-        logging.info("We generated a negative test set with %d examples (the positive set has %d)" % (
+        logger.info("Skipped %d links that were found previously (expected behavior)" % n_skipped_link)
+        logger.info("We generated a negative test set with %d examples (the positive set has %d)" % (
             len(negative_links), len(positive_links)))
         return df
 
-
-    def get_all_phases_all_pk_pki(self, target_year:int):
+    def get_all_phases_all_pk_pki(self, target_year: int):
         """
         It is a conservative estimate to assume that all connections between a PK and PK are valid for the testing set
         In contrast, for training, we use only validated items (phase 4)
@@ -338,9 +345,9 @@ class KcetDatasetGenerator:
         all_pk_pki_df = pkpki.get_all_pk_pki()
         # all_pk_pki_df has rows like this - PKI:abemaciclib; PK: CDK4, ACT_VALUE:0.0000599..., PMID:24919854
         all_links = set()
-        all_phases = self._df_allphases[self._df_allphases['year']<=target_year]
+        all_phases = self._df_allphases[self._df_allphases['year'] <= target_year]
         for _, row in all_phases.iterrows():
-            kinase = row['kinase'] # e.g., CDK4
+            kinase = row['kinase']  # e.g., CDK4
             gene_id = row['gene_id']
             cancer = row['mesh_id']
             pk_pki = all_pk_pki_df[all_pk_pki_df['PK'] == kinase]
@@ -349,8 +356,6 @@ class KcetDatasetGenerator:
                 link = Link(cancer=cancer, kinase=gene_id)
                 all_links.add(link)
         return all_links
-
-
 
     def get_data_for_novel_prediction(self, target_year: int, factor: int = 10) -> Tuple[
         pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -437,11 +442,11 @@ class KcetDatasetGenerator:
                 df.loc[label] = diff_kinase_mesh
             i += 1
             if i % 10000 == 0 and i > 0:
-                logging.info("Created %d/%d (%.1f%%) difference vectors" % (i, total, 100.0 * i / total))
-        logging.info("Extracted %s kinase-cancer difference vectors" % len(df))
-        logging.info("Initial data: %d examples" % len(examples))
-        logging.info("Could not identify %d gene ids" % len(unidentified_genes))
-        logging.info("Could not identify %d MeSH ids" % len(unidentified_cancers))
+                logger.info("Created %d/%d (%.1f%%) difference vectors" % (i, total, 100.0 * i / total))
+        logger.info("Extracted %s kinase-cancer difference vectors" % len(df))
+        logger.info("Initial data: %d examples" % len(examples))
+        logger.info("Could not identify %d gene ids" % len(unidentified_genes))
+        logger.info("Could not identify %d MeSH ids" % len(unidentified_cancers))
         return df
 
     def get_summary(self) -> pd.DataFrame:

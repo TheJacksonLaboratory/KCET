@@ -17,9 +17,11 @@ class TestExtractValidPkiPk(TestCase):
         df = self.valid_pki_pk
         item = df.loc[(df['PKI'] == 'afatinib') & (df['PK'] == 'EGFR')]
         self.assertEqual(1, len(item))
-        row = item.to_numpy()[0]
-        self.assertAlmostEqual(0.0001, float(row[0]))
-        self.assertEqual('18408761', row[3])
+        row = item.iloc[0]
+        kd = float(row['ACT_VALUE'])
+        pmid = row['PMID']
+        self.assertAlmostEqual(kd, 0.0001)
+        self.assertEqual(pmid, '18408761')
 
     def test_alpelisib_PIK3CA(self):
         """
@@ -29,11 +31,13 @@ class TestExtractValidPkiPk(TestCase):
         df = self.valid_pki_pk
         item = df.loc[(df['PKI'] == 'alpelisib') & (df['PK'] == 'PIK3CA')]
         self.assertEqual(2, len(item))
-        row = item.to_numpy()[0]
-        print(row)
-        print("GGGGGGGGGG")
-        self.assertEqual('n/a', row[0])  # We do not have Kd data for this combination
-        self.assertEqual('25544637', row[3])
+        row = item.iloc[0]
+        medication = row['PKI']
+        kd = row['ACT_VALUE']
+        pmid = row['PMID']
+        self.assertEqual('alpelisib', medication)
+        self.assertEqual(kd, 'n/a')  # We do not have Kd data for this combination
+        self.assertEqual(pmid, '25544637')
 
     def test_apatinib_KIT_removed(self):
         """

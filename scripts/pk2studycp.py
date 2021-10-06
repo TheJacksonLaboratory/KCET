@@ -19,7 +19,7 @@ args = parser.parse_args()
 the_pk = args.pk
 the_ctfile = args.clinicaltrials
 
-print("Extraciong all indications tested for protein kinase inhibitors with activity against {}".format(the_pk))
+print("Extracting all indications tested for protein kinase inhibitors with activity against {}".format(the_pk))
 
 pkpki = PkPkiFilter()
 all_pki = set()
@@ -43,15 +43,3 @@ with open(the_ctfile) as f:
 
 for disease in sorted(list(disease_indications)):
     print(disease)
-
-download_dir = '/home/peter/data/pubmed2vec'
-embeddings2020 = os.path.join(download_dir, "embedding_SG_dim100_upto2020.npy")
-words2020 = os.path.join(download_dir, "words_SG_upto2020.txt")
-ctrials = os.path.join(download_dir,"clinical_trials_by_phase.tsv")
-
-datagen = KcetDatasetGenerator(clinical_trials=ctrials, embeddings=embeddings2020,words=words2020)
-X = datagen.get_all_phases_all_pk_pki(target_year=2020)
-print("X, ", type(X), "size = ", len(X))
-
-for x in X:
-    print(x)
