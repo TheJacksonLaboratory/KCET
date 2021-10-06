@@ -5,7 +5,6 @@ import os
 import pandas as pd
 from pathlib import Path
 from collections import defaultdict
-import datetime
 import copy
 from typing import List, Dict
 import logging
@@ -83,7 +82,6 @@ class CTParserByPhase:
         self._pki_dict = None  # List of PKI<->disease UP TO target year
         ## Ingest data
         self._ingest_kinase_cancer_links()
-
 
     def _parse_prot_kinase(self) -> Dict:
         """
@@ -185,7 +183,7 @@ class CTParserByPhase:
             medication = dct['pki']
             if medication is None:
                 raise ValueError("Could not extract PKI")  # should never happen
-            if not medication in self._drug_kinase_links:
+            if medication not in self._drug_kinase_links:
                 # should never happen
                 raise ValueError("Could not find " + medication + " in pki to pk dict")
             lst = self._drug_kinase_links[medication]
@@ -235,5 +233,3 @@ class CTParserByPhase:
 
     def get_year(self):
         return self._year
-
-
