@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
    name='kcet',
-   version='0.3.1',
+   version='0.4.0',
    author='Vida Ravanmehr, Peter N Robinson',
    author_email='vida.ravanmehr@jax.org,peter.robinson@jax.org',
    packages=['kcet'],

@@ -1,4 +1,4 @@
-from .pk_pki_filter import PkPkiFilter
+from .drugcentral_pk_pki_parser import DrugCentralPkPkiParser
 import os
 import pandas as pd
 import numpy as np
@@ -31,9 +31,6 @@ class KcetParser:
         self._target_level_tsv_path = os.path.join(d, 'input', 'target_develop_levels.tsv.csv')
         if not os.path.exists(self._target_level_tsv_path):
             raise FileNotFoundError("Could not find file at %s" % self._target_level_tsv_path)
-        self._drug_kinase_links = os.path.join(d, 'input', 'drug_kinase_links.tsv')
-        if not os.path.exists(self._drug_kinase_links):
-            raise FileNotFoundError("Could not find file at %s" % self._drug_kinase_links)
         # Ingest data
         self._symbol_to_id_map = self._ingest_symbol_to_id_map()
         logging.info("ingested symbol_to_id_map with %d entries such as {'NCBIGene:2870': 'GRK6'}" % len(
@@ -47,8 +44,8 @@ class KcetParser:
         logging.info("Ingested _meshid2disease_map with %d entries" % len(self._meshid2disease_map))
         self._sym2tdl = self._ingest_symbol_to_tdl_map()
         logging.info("Ingested meshid2disease_map with %d entries" % len(self._sym2tdl))
-        self._pki_to_kinase = self._ingest_pki_to_kinase_list_dict()
-        logging.info("Ingested pki_to_kinase with %d entries" % len(self._pki_to_kinase))
+        #self._pki_to_kinase = self._ingest_pki_to_kinase_list_dict()
+        self._drug_central = DrugCentralPkPkiParser()
 
     def _ingest_symbol_to_id_map(self) -> Dict:
         """
@@ -165,61 +162,6 @@ class KcetParser:
     def get_symbol_to_tdl_map(self) -> Dict:
         return self._sym2tdl
 
-    def get_gold_standard_df(self) -> pd.DataFrame:
-        kinase_to_inhibitor = defaultdict(list)
-        with open(self._drug_kinase_links) as f:
-            next(f)  # skip header
-            for line in f:
-                fields = line.rstrip().split('\t')
-                if len(fields) != 3:
-                    raise ValueError("Bad line in %s: %s" % (self._drug_kinase_links, line))
-                pki = fields[0]
-                pk = fields[1]
-                kinase_to_inhibitor[pk].append(pki)
-        dict_list = []
-        for k, v in sorted(kinase_to_inhibitor.items()):
-            pkis = ", ".join(v)
-            d = {'gene': k, 'protein kinase inhibitors': pkis}
-            dict_list.append(d)
-        return pd.DataFrame(dict_list)  # ['gene', 'protein kinase inhibitors']
 
-    def get_gold_standard_set(self) -> Set:
-        gold = set()
-        with open(self._drug_kinase_links) as f:
-            next(f)  # skip header
-            for line in f:
-                fields = line.rstrip().split('\t')
-                if len(fields) != 3:
-                    raise ValueError("Bad line in %s: %s" % (self._drug_kinase_links, line))
-                pk = fields[1]
-                gold.add(pk)
-        return gold
 
-    def _ingest_pki_to_kinase_list_dict(self):
-        """
-        Create a dictionary with the data from drug_kinase_links.tsv
-        key -- a protein kinase inhibitor such as abemaciclib
-        value -- list of kinases inhibited by the PKI, e.g., [CDK4,CDK6]
-        """
-        pki_to_kinase = defaultdict(list)
-        with open(self._drug_kinase_links) as f:
-            for line in f:
-                fields = line.rstrip().split('\t')
-                if len(fields) != 4:
-                    raise ValueError("Bad line in %s (%s)" % (self._drug_kinase_links, line))
-                pki = fields[0]
-                pk = fields[1]  # kinase that is inhibited by the PKI in fields[0]
-                pki_to_kinase[pki].append(pk)
-        return pki_to_kinase
 
-    def _get_pki_to_kinase_list_dict_max_pk(self, n_pk: int) -> pd.DataFrame:
-        """
-        This function retrieves links between protein-kinase inhibitors and the protein kinases
-        that are inhibited. Since may PKIs inhibit multiple PKs, the PkPkiFilter gets up to
-        n_pk protein kinases per PKI (ranked by affinity)
-        """
-        pkpki = PkPkiFilter()
-        return pkpki.get_valid_pk_pki(n_pk)
-
-    def get_pki_to_kinase_list_dict(self):
-        return self._pki_to_kinase

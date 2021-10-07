@@ -1,11 +1,11 @@
 from .clinical_trial import ClinicalTrial
 from .kinase_inhibitor import KinaseInhibitor
+from .drugcentral_pk_pki_parser import DrugCentralPkPkiParser
 
 import os
 import pandas as pd
 from pathlib import Path
 from collections import defaultdict
-import datetime
 import copy
 from typing import List, Dict
 import logging
@@ -60,13 +60,10 @@ class CTParserByPhase:
 
     """
 
-    def __init__(self,
-                 clinical_trials: str):
+    def __init__(self, clinical_trials: str, n_pk: int = 5):
         """
-        :param clinical_trials_data_path: This is the output file from yactp.  (https://github.com/monarch-initiative/yactp).
-        :param year: The target year for analysis -- take all data up to this year
-        The output file contains kinase-cancer links corresponding to the specific phase that the drugs were tested has
-        before that year.
+        :param clinical_trials: This is the output file from yactp.  (https://github.com/monarch-initiative/yactp).
+        The output file contains kinase-cancer links corresponding to the specific phase that the drugs were tested
         """
         dir_path = os.path.dirname(os.path.realpath(__file__))  # directory of current file
         base_path = Path(dir_path).parent  # parent directory -- the base of the project
@@ -77,13 +74,18 @@ class CTParserByPhase:
         if not os.path.isfile(self._clinical_trials_data_path):
             raise FileNotFoundError("Could not find %s" % self._clinical_trials_data_path)
         self.drug_kinase_links_data_path = os.path.join(base_path, 'input', 'drug_kinase_links.tsv')
-        self._genesymbol_to_id_map = None
-        self._drug_kinase_links = None
-        self.all_phases_df = None
-        self._pki_dict = None  # List of PKI<->disease UP TO target year
-        ## Ingest data
-        self._ingest_kinase_cancer_links()
+        # _genesymbol_to_id map has entries like {CDK20:ncbigene23552}
+        self._genesymbol_to_id_map = self._parse_prot_kinase()
 
+        self.all_phases_df = None
+        drug_central_parser = DrugCentralPkPkiParser()
+        # both of the following variables have entries like {abemaciclib:[CDK4,CDK6]}
+        # the thresholded version is used for training.
+        # the 'all links' version has all links from DrugCentral, regardless of threshold -- we do not want
+        # to test against this because it would not be fair.
+        self._thresholded_pk_pki_links = drug_central_parser.get_pk_pki_with_threshold(n_pki_limit=n_pk)
+        self._all_pk_pki_links = drug_central_parser.get_all_pk_pki()
+        self._ingest_kinase_cancer_links()
 
     def _parse_prot_kinase(self) -> Dict:
         """
@@ -107,19 +109,6 @@ class CTParserByPhase:
                     ncbigene)  # We add "ncbigene" because in pubmed_cr.tsv, genes are represented in this way
                 symbol2ncbigene[sym] = ncbi_gene_id
         return symbol2ncbigene
-
-    def _parse_kinase_inhibitor_to_kinase_file(self) -> Dict:
-        if not os.path.exists(self.drug_kinase_links_data_path):
-            raise FileNotFoundError("Cound not find drug_kinase_links.tsv file")
-        pki_to_kinase_dict = defaultdict(list)
-        with open(self.drug_kinase_links_data_path) as f:
-            header = next(f)
-            if not header.startswith('PKI'):
-                raise ValueError("Malformed header of drug_kinase_links.tsv file")
-            for line in f:
-                e = Entry(line)
-                pki_to_kinase_dict[e.pki].append(e.pk)
-        return pki_to_kinase_dict
 
     def _get_ct_by_phase(self) -> List:
         """
@@ -157,10 +146,6 @@ class CTParserByPhase:
         e.g. Phase 1 before a specific date (year). The phase and date are specified by the user.
         Then, we use the drug_kinase_links.tsv to obtain drug-kinase links and finally we generate disease_kinase links.
         """
-        # _genesymbol_to_id map has entries like {CDK20:ncbigene23552}
-        self._genesymbol_to_id_map = self._parse_prot_kinase()
-        # _drug_kinase_links has entries like {abemaciclib:[CDK4,CDK6]}
-        self._drug_kinase_links = self._parse_kinase_inhibitor_to_kinase_file()
         trials = self._get_ct_by_phase()
         # sanity check-make a set of the medications
         medications = {t.drug for t in trials}
@@ -175,7 +160,7 @@ class CTParserByPhase:
             ki.add_study(cancer=t.disease, mesh_id=t.mesh_id, nct=t.nct_id, year=t.start_date, phase=t.phase)
         self._pki_dict = pki_dict
 
-    def _get_data_frame(self, dict_list: List, remove_redundant_entries: bool = False):
+    def _get_data_frame(self, dict_list: List, remove_redundant_entries: bool = False) -> pd.DataFrame:
         """
         Return a pandas dataframe with data for all trials and all phases
         Constructs the dataframe from a list of dictionaries
@@ -185,10 +170,10 @@ class CTParserByPhase:
             medication = dct['pki']
             if medication is None:
                 raise ValueError("Could not extract PKI")  # should never happen
-            if not medication in self._drug_kinase_links:
+            if medication not in self._thresholded_pk_pki_links:
                 # should never happen
                 raise ValueError("Could not find " + medication + " in pki to pk dict")
-            lst = self._drug_kinase_links[medication]
+            lst = self._thresholded_pk_pki_links[medication]
             for kinase in lst:
                 if kinase not in self._genesymbol_to_id_map:
                     # should never happen
@@ -214,26 +199,24 @@ class CTParserByPhase:
         newcols = ['cancer', 'mesh_id', 'kinase', 'gene_id', 'pki', 'nct', 'phase', 'year']
         return df[newcols]
 
-    def get_all_phases(self, removeRedundantEntries: bool = False):
+    def get_all_phases(self, remove_redundant_entries: bool = False):
         """
         Return a pandas dataframe with data for all trials and all phases
         """
-        dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
+        dict_list = []
         for _, v in self._pki_dict.items():
             dict_list.extend(v.get_data_frame_all_phases())
-        df = self._get_data_frame(dict_list=dict_list, remove_redundant_entries=removeRedundantEntries)
+        df = self._get_data_frame(dict_list=dict_list, remove_redundant_entries=remove_redundant_entries)
         return df
 
-    def get_phase_4(self, removeRedundantEntries: bool = False):
+    def get_phase_4(self, remove_redundant_entries: bool = False):
         """
         Return a pandas dataframe with data for all trials in phase 4
         """
-        dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
+        dict_list = []
         for _, v in self._pki_dict.items():
             dict_list.extend(v.get_data_frame_phase_4())
-        return self._get_data_frame(dict_list=dict_list, remove_redundant_entries=removeRedundantEntries)
+        return self._get_data_frame(dict_list=dict_list, remove_redundant_entries=remove_redundant_entries)
 
     def get_year(self):
         return self._year
-
-

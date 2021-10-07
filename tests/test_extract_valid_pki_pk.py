@@ -1,4 +1,4 @@
-from kcet import PkPkiFilter
+from kcet import DrugCentralPkPkiParser
 from unittest import TestCase
 import logging
 logging.disable(logging.CRITICAL)
@@ -6,8 +6,8 @@ logging.disable(logging.CRITICAL)
 class TestExtractValidPkiPk(TestCase):
     @classmethod
     def setUpClass(cls):
-        pkpki = PkPkiFilter()
-        cls.valid_pki_pk = pkpki.get_valid_pk_pki()
+        pkpki = DrugCentralPkPkiParser()
+        cls.valid_pki_pk = pkpki.get_pk_pki_with_threshold()
         cls.EPSILON = 0.00001
 
     def test_afatinib_EGFR(self):

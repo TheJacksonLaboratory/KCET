@@ -1,6 +1,6 @@
 import random
 
-from .kcet_parser import KcetParser, PkPkiFilter
+from .kcet_parser import KcetParser, DrugCentralPkPkiParser
 from .ct_by_phase_parser import CTParserByPhase
 
 import pandas as pd
@@ -102,14 +102,14 @@ class KcetDatasetGenerator:
 
     def __init__(self, clinical_trials: str, embeddings: str, words: str, n_pk: int = 5) -> None:
         kcetParser = KcetParser()
-        self._pki_to_kinase_df = kcetParser._get_pki_to_kinase_list_dict_max_pk(n_pk=n_pk)
-        if not isinstance(self._pki_to_kinase_df, pd.DataFrame):
-            raise ValueError("_pki_to_kinase_dict needs to be a DataFrame")
+        #self._pki_to_kinase_df = kcetParser._get_pki_to_kinase_list_dict_max_pk(n_pk=n_pk)
+        #if not isinstance(self._pki_to_kinase_df, pd.DataFrame):
+        #    raise ValueError("_pki_to_kinase_dict needs to be a DataFrame")
         self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()
         self._mesh_list = kcetParser.get_mesh_id_list()
         parser = CTParserByPhase(clinical_trials=clinical_trials)
-        self._df_allphases = parser.get_all_phases(removeRedundantEntries=True)  # all positive data, phase 1,2,3,4
-        self._df_phase4 = parser.get_phase_4(removeRedundantEntries=True)  # all positive data, phase 4 only
+        self._df_allphases = parser.get_all_phases(remove_redundant_entries=True)  # all positive data, phase 1,2,3,4
+        self._df_phase4 = parser.get_phase_4(remove_redundant_entries=True)  # all positive data, phase 4 only
         self._n_pk = n_pk
         # add the embeddings
         if not os.path.exists(embeddings):
@@ -350,20 +350,13 @@ class KcetDatasetGenerator:
         This method returns a data frame with cancer/PK links that are derived from all studies up to the target year,
         and all PK/PKI links (i.e., not limited to the n_pk_pki parameter that is used for the training set)
         """
-        pkpki = PkPkiFilter()
-        all_pk_pki_df = pkpki.get_all_pk_pki()
-        # all_pk_pki_df has rows like this - PKI:abemaciclib; PK: CDK4, ACT_VALUE:0.0000599..., PMID:24919854
         all_links = set()
         all_phases = self._df_allphases[self._df_allphases['year'] <= target_year]
         for _, row in all_phases.iterrows():
-            kinase = row['kinase']  # e.g., CDK4
-            gene_id = row['gene_id']  # e.g., NCBI Gene id corresponding to CDK4
-            cancer = row['mesh_id']  # e.g., MeSH ID of a cancer that can be treated with a PKI that targets CDK4
-            pk_pki = all_pk_pki_df[all_pk_pki_df['PK'] == kinase]
-            for idx, item in pk_pki.iterrows():
-                pk = item['PK']
-                link = Link(cancer=cancer, kinase=gene_id)
-                all_links.add(link)
+            kinase_gene_id = row['gene_id']  # e.g., NCBI Gene id corresponding to CDK4
+            cancer_mesh_id = row['mesh_id']  # e.g., MeSH ID of a cancer that can be treated with a PKI that targets CDK4
+            link = Link(cancer=cancer_mesh_id, kinase=kinase_gene_id)
+            all_links.add(link)
         if len(all_links) == 0:
             raise ValueError("TO DO COULD NOT FIND ALL LINKS")
         return all_links
@@ -379,31 +372,31 @@ class KcetDatasetGenerator:
         n_neg = factor * len(positive_training_df)
         negative_training_df = self.get_neg_training_embeddings(target_year=target_year, n_neg_examples=n_neg)
         prediction_df = pd.DataFrame(columns=self._embeddings_df.columns)
-        kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
+        kinase_list = [gene_id for _, gene_id in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
         i = 0
         total = len(kinase_list) * len(cancer_id_list)
-        print("Links to be extracted: {}".format(total))
+        logger.info("Links to be extracted: {}".format(total))
         # We remove all positive protein-kinase/cancer associations regardless of phase
         positive_links = self.get_all_phases_all_pk_pki(target_year=target_year)
         negative_links = Link.fromEmbeddingsToLinkSet(negative_training_df)
-        for ncbigene_id in kinase_list:
+        for ncbi_gene_id in kinase_list:
             for mesh_id in cancer_id_list:
                 i += 1
                 if i % 2000 == 0:
                     print("\r{}/{} links extracted ({:.2f}%)".format(i, total, 100 * i / total), end="")
-                randomLink = Link(kinase=ncbigene_id, cancer=mesh_id)
+                randomLink = Link(kinase=ncbi_gene_id, cancer=mesh_id)
                 if randomLink in positive_links or randomLink in negative_links:
                     continue
                 ncbigene_id_embedding = None
                 mesh_id_embedding = None
-                if ncbigene_id in self._embeddings_df.index:
-                    ncbigene_id_embedding = self._embeddings_df.loc[ncbigene_id]
+                if ncbi_gene_id in self._embeddings_df.index:
+                    ncbigene_id_embedding = self._embeddings_df.loc[ncbi_gene_id]
                 if mesh_id in self._embeddings_df.index:
                     mesh_id_embedding = self._embeddings_df.loc[mesh_id]
                 if ncbigene_id_embedding is not None and mesh_id_embedding is not None:
                     diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
-                    label = "%s-%s" % (ncbigene_id, mesh_id)
+                    label = "%s-%s" % (ncbi_gene_id, mesh_id)
                     prediction_df.loc[label] = diff_kinase_mesh
         return positive_training_df, negative_training_df, prediction_df
 
@@ -466,15 +459,15 @@ class KcetDatasetGenerator:
         for display in a Jupyter notebook etc.
         """
         data = []
-        n_pki = len(self._pki_to_kinase_df)
-        data.append(['Above threshold PKI/PKI links', "{:d}".format(n_pki)])
-        df = self._pki_to_kinase_df.groupby("PKI")["PK"].count()
-        mean_pk_per_pki = np.mean(df)
-        data.append(['mean PKs per PKI (DrugCentral dataset)', "{:.2f}".format(mean_pk_per_pki)])
-        n_unique_kinases = len(pd.unique(self._pki_to_kinase_df['PK']))
-        data.append(['protein kinases in DrugCentral dataset', "{:d}".format(n_unique_kinases)])
-        n_unique_PKIs = len(pd.unique(self._pki_to_kinase_df['PKI']))
-        data.append(['protein kinase inhibitors in DrugCentral dataset', "{:d}".format(n_unique_PKIs)])
+        #n_pki = len(self.)
+        #data.append(['Above threshold PKI/PKI links', "{:d}".format(n_pki)])
+        #df = self._pki_to_kinase_df.groupby("PKI")["PK"].count()
+        #mean_pk_per_pki = np.mean(df)
+        #data.append(['mean PKs per PKI (DrugCentral dataset)', "{:.2f}".format(mean_pk_per_pki)])
+        #n_unique_kinases = len(pd.unique(self._pki_to_kinase_df['PK']))
+        #data.append(['protein kinases in DrugCentral dataset', "{:d}".format(n_unique_kinases)])
+        #n_unique_PKIs = len(pd.unique(self._pki_to_kinase_df['PKI']))
+        #data.append(['protein kinase inhibitors in DrugCentral dataset', "{:d}".format(n_unique_PKIs)])
         n_ncbi_kinases = len(self._symbol_to_id_map)
         data.append(['protein kinases in NCBI gene dataset', "{:d}".format(n_ncbi_kinases)])
         n_mesh = len(self._mesh_list)
