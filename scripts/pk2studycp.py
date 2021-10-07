@@ -25,8 +25,7 @@ words = args.words
 
 print("Extracting all indications tested for protein kinase inhibitors with activity against {}".format(the_pk))
 
-parser = CTParserByPhase(clinical_trials=the_ctfile)
-df = parser.get_all_phases()  # _drug_kinase_links has entries like {abemaciclib:[CDK4,CDK6]}()
+datagen = KcetDatasetGenerator(clinical_trials = the_ctfile,  embeddings=embeddings, words=words)
 
 
 
