@@ -2,13 +2,13 @@ from collections import defaultdict
 
 
 class Cancer:
-    def __init__(self, name:str, mesh_id:str) -> None:
+    def __init__(self, name: str, mesh_id: str) -> None:
         self._name = name
         self._mesh_id = mesh_id
         self._studies_by_phase = defaultdict(list)
 
-    def add_study(self, nct:str, phase:str, year:int) -> None:
-        s = Study(nct=nct, phase=phase,year=year)
+    def add_study(self, nct: str, phase: str, year: int) -> None:
+        s = Study(nct=nct, phase=phase, year=year)
         self._studies_by_phase[phase].append(s)
 
     @property
@@ -31,16 +31,17 @@ class Study:
         _phase  Clinical trial phase (1, 2, 3, 4)
         _year  start year of the study
     """
+
     def __init__(self, nct, phase: str, year: int) -> None:
         # sanity checks
         expected_phases = {"Phase 1", "Phase 2", "Phase 3", "Phase 4"}
-        if not phase in expected_phases:
+        if phase not in expected_phases:
             raise ValueError("Invalid phase \"%s\"" % phase)
         if not isinstance(year, int):
             raise ValueError("Invalid year " + year)
         self._nct = nct
         self._phase = phase
-        self._year = year # start year
+        self._year = year  # start year
 
     @property
     def nct(self) -> str:
@@ -65,33 +66,34 @@ class KinaseInhibitor:
         _name    Name of the protein kinase inhibitor (PKI), e.g., sorafenib.
         _cancerdict  dictionary of cancers for which this PKI has been used for a clinical trial.
     """
-    def __init__(self, name:str) -> None:
-        self._name = name
-        self._cancerdict = defaultdict(Cancer)
 
-    def add_study(self, cancer:str, mesh_id:str, nct:str, phase:str, year:int) -> None:
-        if mesh_id not in self._cancerdict:
+    def __init__(self, name: str) -> None:
+        self._name = name
+        self._cancer_dict = defaultdict(Cancer)
+
+    def add_study(self, cancer: str, mesh_id: str, nct: str, phase: str, year: int) -> None:
+        if mesh_id not in self._cancer_dict:
             c = Cancer(name=cancer, mesh_id=mesh_id)
-            self._cancerdict[mesh_id] = c
-        c = self._cancerdict.get(mesh_id)
-        c.add_study(nct=nct, phase=phase,year=year)
-        
+            self._cancer_dict[mesh_id] = c
+        c = self._cancer_dict.get(mesh_id)
+        c.add_study(nct=nct, phase=phase, year=year)
+
     def get_data_frame_all_phases(self):
         list_of_dicts = []
         pki = self._name
-        for _, v in self._cancerdict.items():
+        for _, v in self._cancer_dict.items():
             cancer = v.name
             mesh = v.mesh_id
             study_d = v.get_studies_dict()
             for _, study_list in study_d.items():
                 for study in study_list:
                     d = {
-                    'pki': pki,
-                    'cancer': cancer,
-                    'mesh_id': mesh,
-                    'phase': study.phase,
-                    'year': study.year,
-                    'nct': study.nct
+                        'pki': pki,
+                        'cancer': cancer,
+                        'mesh_id': mesh,
+                        'phase': study.phase,
+                        'year': study.year,
+                        'nct': study.nct
                     }
                     list_of_dicts.append(d)
         return list_of_dicts
@@ -99,7 +101,7 @@ class KinaseInhibitor:
     def get_data_frame_phase_4(self):
         list_of_dicts = []
         pki = self._name
-        for _, v in self._cancerdict.items():
+        for _, v in self._cancer_dict.items():
             cancer = v.name
             mesh = v.mesh_id
             study_d = v.get_studies_dict()
@@ -116,4 +118,3 @@ class KinaseInhibitor:
                         }
                         list_of_dicts.append(d)
         return list_of_dicts
-  

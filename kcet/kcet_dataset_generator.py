@@ -108,8 +108,8 @@ class KcetDatasetGenerator:
         self._symbol_to_id_map = kcetParser.get_symbol_to_id_map()
         self._mesh_list = kcetParser.get_mesh_id_list()
         parser = CTParserByPhase(clinical_trials=clinical_trials)
-        self._df_allphases = parser.get_all_phases(removeRedundantEntries=True)  # all positive data, phase 1,2,3,4
-        self._df_phase4 = parser.get_phase_4(removeRedundantEntries=True)  # all positive data, phase 4 only
+        self._df_allphases = parser.get_all_phases(remove_redundant_entries=True)  # all positive data, phase 1,2,3,4
+        self._df_phase4 = parser.get_phase_4(remove_redundant_entries=True)  # all positive data, phase 4 only
         self._n_pk = n_pk
         # add the embeddings
         if not os.path.exists(embeddings):
@@ -372,31 +372,31 @@ class KcetDatasetGenerator:
         n_neg = factor * len(positive_training_df)
         negative_training_df = self.get_neg_training_embeddings(target_year=target_year, n_neg_examples=n_neg)
         prediction_df = pd.DataFrame(columns=self._embeddings_df.columns)
-        kinase_list = [geneid for _, geneid in self._symbol_to_id_map.items()]
+        kinase_list = [gene_id for _, gene_id in self._symbol_to_id_map.items()]
         cancer_id_list = self._mesh_list
         i = 0
         total = len(kinase_list) * len(cancer_id_list)
-        print("Links to be extracted: {}".format(total))
+        logger.info("Links to be extracted: {}".format(total))
         # We remove all positive protein-kinase/cancer associations regardless of phase
         positive_links = self.get_all_phases_all_pk_pki(target_year=target_year)
         negative_links = Link.fromEmbeddingsToLinkSet(negative_training_df)
-        for ncbigene_id in kinase_list:
+        for ncbi_gene_id in kinase_list:
             for mesh_id in cancer_id_list:
                 i += 1
                 if i % 2000 == 0:
                     print("\r{}/{} links extracted ({:.2f}%)".format(i, total, 100 * i / total), end="")
-                randomLink = Link(kinase=ncbigene_id, cancer=mesh_id)
+                randomLink = Link(kinase=ncbi_gene_id, cancer=mesh_id)
                 if randomLink in positive_links or randomLink in negative_links:
                     continue
                 ncbigene_id_embedding = None
                 mesh_id_embedding = None
-                if ncbigene_id in self._embeddings_df.index:
-                    ncbigene_id_embedding = self._embeddings_df.loc[ncbigene_id]
+                if ncbi_gene_id in self._embeddings_df.index:
+                    ncbigene_id_embedding = self._embeddings_df.loc[ncbi_gene_id]
                 if mesh_id in self._embeddings_df.index:
                     mesh_id_embedding = self._embeddings_df.loc[mesh_id]
                 if ncbigene_id_embedding is not None and mesh_id_embedding is not None:
                     diff_kinase_mesh = np.subtract(ncbigene_id_embedding, mesh_id_embedding)
-                    label = "%s-%s" % (ncbigene_id, mesh_id)
+                    label = "%s-%s" % (ncbi_gene_id, mesh_id)
                     prediction_df.loc[label] = diff_kinase_mesh
         return positive_training_df, negative_training_df, prediction_df
 

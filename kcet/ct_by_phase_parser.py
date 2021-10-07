@@ -199,24 +199,24 @@ class CTParserByPhase:
         newcols = ['cancer', 'mesh_id', 'kinase', 'gene_id', 'pki', 'nct', 'phase', 'year']
         return df[newcols]
 
-    def get_all_phases(self, removeRedundantEntries: bool = False):
+    def get_all_phases(self, remove_redundant_entries: bool = False):
         """
         Return a pandas dataframe with data for all trials and all phases
         """
-        dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
+        dict_list = []
         for _, v in self._pki_dict.items():
             dict_list.extend(v.get_data_frame_all_phases())
-        df = self._get_data_frame(dict_list=dict_list, remove_redundant_entries=removeRedundantEntries)
+        df = self._get_data_frame(dict_list=dict_list, remove_redundant_entries=remove_redundant_entries)
         return df
 
-    def get_phase_4(self, removeRedundantEntries: bool = False):
+    def get_phase_4(self, remove_redundant_entries: bool = False):
         """
         Return a pandas dataframe with data for all trials in phase 4
         """
-        dict_list = []  ## The dictionaries WITHOUT the info about kinases/gene ids
+        dict_list = []
         for _, v in self._pki_dict.items():
             dict_list.extend(v.get_data_frame_phase_4())
-        return self._get_data_frame(dict_list=dict_list, remove_redundant_entries=removeRedundantEntries)
+        return self._get_data_frame(dict_list=dict_list, remove_redundant_entries=remove_redundant_entries)
 
     def get_year(self):
         return self._year

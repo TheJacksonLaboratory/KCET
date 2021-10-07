@@ -5,8 +5,7 @@ from .kcet_random_forest import KcetRandomForest
 from .wordvec2cosine import Wordvec2Cosine
 from .drugcentral_pk_pki_parser import DrugCentralPkPkiParser
 
-
-__all__  = [
+__all__ = [
     "CTParserByPhase",
     "KcetDatasetGenerator",
     "KcetParser",

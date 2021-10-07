@@ -175,12 +175,4 @@ class DrugCentralPkPkiParser:
                 valid_pki_dict[pk_pki.pki].append(pk_pki.pk)
         return valid_pki_dict
 
-    def output_to_file(self, outfilename: str, n_pki_limit: int = 5, threshold: float = 0.03):
-        valid_pk_pki = self.get_pk_pki_with_threshold(n_pki_limit=n_pki_limit, threshold=threshold)
-        valid_pk_pki.to_csv(outfilename, sep='\t', index=False)
-        n_rows = valid_pk_pki.shape[0]
-        logger.info("We wrote {} PK PKI links to file".format(n_rows))
-        logger.info("Output filename: \"{}\"".format(outfilename))
-        logger.info("We got {} unique PKIs".format(len(valid_pk_pki.PKI.unique())))
-        logger.info("We got {} unique PKs".format(len(valid_pk_pki.PK.unique())))
-        logger.info("Settings: n_pki_limit: %d; threshold: %f", n_pki_limit, threshold)
+
