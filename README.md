@@ -39,7 +39,7 @@ There are many ways of doing this. The following is one way.
 ```
 virtualenv mykernel
 source mykernel/bin/activate
-(mykernel) $ pip install -r requirments
+(mykernel) $ pip install -r requirements.txt
 (mykernel) $ pip install jupyter
 (mykernel) $ ipython kernel install --name "local-venv" --user
 (mykernel) $ jupyter-lab
