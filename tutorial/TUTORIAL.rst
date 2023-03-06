@@ -26,7 +26,7 @@ For the experiments described in the main text, we used an in-house Python packa
 format the abstracts in preparation for word/concept embedding. Since the submission of this paper, 
 PubTator has adopted a new format (BioCXML) and the marea scripts will no longer work. Users should adapt concept replacement to the needs of their analysis goals, and can use the marea scripts as a jumping off point.
 
-2. concept embedding
+2. Concept embedding
 ####################
 
 
